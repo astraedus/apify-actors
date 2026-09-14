@@ -1,0 +1,10 @@
+# The image installs its own production dependencies; never ship the local tree.
+node_modules
+storage
+apify_storage
+.git
+.env
+*.log
+# Tests and their fixtures are not needed at runtime.
+test
+tsconfig.json

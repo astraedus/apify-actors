@@ -1,0 +1,98 @@
+{
+    "title": "App Store & Google Play Review Monitor",
+    "description": "Leave everything as-is and press Start for a working demo run. Swap in your own apps to monitor them.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "apps": {
+            "title": "Apps to monitor",
+            "type": "array",
+            "description": "Google Play package names (dev.astraedus.nudge), Apple numeric app IDs (284882215), or full store URLs from either store. The store is detected automatically.",
+            "editor": "stringList",
+            "prefill": [
+                "dev.astraedus.nudge",
+                "com.raeduslabs.origo",
+                "com.raeduslabs.soulsyncapp",
+                "284882215"
+            ],
+            "default": [
+                "dev.astraedus.nudge",
+                "com.raeduslabs.origo",
+                "com.raeduslabs.soulsyncapp",
+                "284882215"
+            ],
+            "sectionCaption": "Apps & countries",
+            "sectionDescription": "What to check, and in which storefronts."
+        },
+        "countries": {
+            "title": "Countries",
+            "type": "array",
+            "description": "Two-letter ISO country codes for the storefronts to check, e.g. us, gb, de. Each app is checked in every country listed, and each app+country pair is billed as one 'app-checked' event. A country baked into a store URL wins for that app.",
+            "editor": "stringList",
+            "prefill": ["us"],
+            "default": ["us"]
+        },
+        "maxReviewsPerApp": {
+            "title": "Max reviews per app",
+            "type": "integer",
+            "description": "Upper bound on reviews emitted per app+country per run. On the very first run this is your backlog size; afterwards it only caps unusually busy days. Apple's public feed tops out at 500 reviews.",
+            "editor": "number",
+            "minimum": 1,
+            "maximum": 1000,
+            "prefill": 200,
+            "default": 200
+        },
+        "onlyNew": {
+            "title": "Only new reviews since the last run",
+            "type": "boolean",
+            "description": "Keep this on for scheduled monitoring: review IDs already emitted are remembered between runs and skipped, so you only pay for and receive genuinely new reviews. The first run for each app emits a full baseline. Turn off to re-export everything on every run.",
+            "editor": "checkbox",
+            "prefill": true,
+            "default": true,
+            "sectionCaption": "Monitoring",
+            "sectionDescription": "How the incremental behaviour works."
+        },
+        "minRating": {
+            "title": "Minimum rating",
+            "type": "integer",
+            "description": "Only emit reviews rated at least this many stars. Leave empty for no lower bound.",
+            "editor": "number",
+            "minimum": 1,
+            "maximum": 5
+        },
+        "maxRating": {
+            "title": "Maximum rating",
+            "type": "integer",
+            "description": "Only emit reviews rated at most this many stars. Set to 2 to be alerted about angry reviews only.",
+            "editor": "number",
+            "minimum": 1,
+            "maximum": 5,
+            "sectionCaption": "Filters"
+        },
+        "webhookUrl": {
+            "title": "Webhook URL",
+            "type": "string",
+            "description": "Optional. After the run, a JSON summary (per app: new review count, average rating, the worst reviews) is POSTed here. Works with Slack workflow URLs, Zapier, Make, or your own endpoint. A failing webhook never fails the run.",
+            "editor": "textfield",
+            "example": "https://hooks.zapier.com/hooks/catch/123456/abcdef",
+            "sectionCaption": "Alerting"
+        },
+        "stateStoreName": {
+            "title": "State key-value store name",
+            "type": "string",
+            "description": "Named key-value store holding the already-seen review IDs. Change it to run two independent monitors (for example a daily digest and a weekly report) over the same apps without them stealing each other's reviews.",
+            "editor": "textfield",
+            "prefill": "app-review-monitor-state",
+            "default": "app-review-monitor-state",
+            "sectionCaption": "Advanced"
+        },
+        "resetState": {
+            "title": "Forget previously seen reviews",
+            "type": "boolean",
+            "description": "One-off: clears the stored review IDs for the apps in this run, so this run re-emits a full baseline. Leave off for normal scheduled use.",
+            "editor": "checkbox",
+            "default": false
+        }
+    },
+    "required": []
+}

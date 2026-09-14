@@ -1,0 +1,13 @@
+{
+    "_comment": [
+        "Store-page metadata kept in version control. As of 2026-09-14 these fields are set",
+        "through Apify Console or PUT /v2/acts/{actorId} (which accepts seoTitle, seoDescription,",
+        "title, categories and isPublic) — actor.json has no field for them, so without this file",
+        "they would live only in the Console UI with no history and no review.",
+        "test/definition.test.ts enforces the length limits and keeps the title congruent with",
+        "actor.json, the input schema and the README."
+    ],
+    "seoTitle": "App Store & Google Play Review Monitor - New Reviews Only",
+    "seoDescription": "Track new Google Play and App Store reviews on a schedule. Only reviews since the last run, with rating filters and webhook alerts.",
+    "categories": ["BUSINESS", "DEVELOPER_TOOLS"]
+}
