@@ -1,0 +1,20 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "TikTok Growth Monitor output",
+    "description": "One row per monitored profile with its growth since the last run, plus a compact run summary.",
+    "type": "object",
+    "properties": {
+        "profiles": {
+            "type": "string",
+            "title": "Profile growth",
+            "description": "One row per profile: follower and view growth since the previous snapshot, new videos, and viral outliers.",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        },
+        "runSummary": {
+            "type": "string",
+            "title": "Run summary",
+            "description": "Totals across every monitored profile: follower delta, new videos, outlier count, and any profile that returned no data.",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/OUTPUT"
+        }
+    }
+}

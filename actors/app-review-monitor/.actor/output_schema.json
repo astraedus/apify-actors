@@ -1,0 +1,20 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "App Store & Google Play Review Monitor output",
+    "description": "The new reviews found by this run, plus a summary of what was checked.",
+    "type": "object",
+    "properties": {
+        "reviews": {
+            "type": "string",
+            "title": "New reviews",
+            "description": "One row per review that no previous run had emitted, across every app and country checked.",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        },
+        "runSummary": {
+            "type": "string",
+            "title": "Run summary",
+            "description": "Per app and country: reviews fetched, new reviews emitted, average rating, and a plain-English note about anything the run could not check.",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/RUN_SUMMARY"
+        }
+    }
+}

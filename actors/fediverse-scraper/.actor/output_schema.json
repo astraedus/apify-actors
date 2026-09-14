@@ -1,0 +1,20 @@
+{
+    "actorOutputSchemaVersion": 1,
+    "title": "Fediverse Scraper output",
+    "description": "Mastodon and Bluesky posts and profiles in one normalised shape, plus a summary of the run.",
+    "type": "object",
+    "properties": {
+        "results": {
+            "type": "string",
+            "title": "Posts & profiles",
+            "description": "Every scraped row. Both platforms share the same columns, so `platform` is the only field you have to branch on.",
+            "template": "{{links.apiDefaultDatasetUrl}}/items"
+        },
+        "runSummary": {
+            "type": "string",
+            "title": "Run summary",
+            "description": "Per target: how many posts and profiles were collected, and anything that could not be reached.",
+            "template": "{{links.apiDefaultKeyValueStoreUrl}}/records/RUN_SUMMARY"
+        }
+    }
+}
