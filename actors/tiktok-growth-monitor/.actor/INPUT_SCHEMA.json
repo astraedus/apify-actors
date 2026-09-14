@@ -1,0 +1,63 @@
+{
+    "title": "TikTok Growth Monitor",
+    "description": "Track a batch of TikTok profiles over time: follower and view growth, new videos, and viral outliers.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "profiles": {
+            "title": "TikTok profiles",
+            "type": "array",
+            "description": "Profiles to monitor. Accepts bare handles (<code>tiktok</code>), @handles (<code>@tiktok</code>) or full profile URLs (<code>https://www.tiktok.com/@tiktok</code>). Duplicates are merged, so you are never charged twice for the same profile.",
+            "editor": "stringList",
+            "default": ["tiktok", "khaby.lame"],
+            "prefill": ["tiktok", "khaby.lame"],
+            "minItems": 1,
+            "maxItems": 200
+        },
+        "videosPerProfile": {
+            "title": "Videos per profile",
+            "type": "integer",
+            "description": "How many of the most recent videos to fetch per profile. This is the window the median, outlier and per-video delta maths run over. Bigger windows give a more stable median but cost more at the base scraper.",
+            "default": 20,
+            "prefill": 10,
+            "minimum": 1,
+            "maximum": 200,
+            "unit": "videos"
+        },
+        "outlierMultiplier": {
+            "title": "Viral outlier multiplier",
+            "type": "integer",
+            "description": "A video is flagged as a viral outlier when its view count is at least this many times the profile's median view count over the fetched window. 3 is a good default; lower it to 2 for a chattier alert feed.",
+            "default": 3,
+            "prefill": 3,
+            "minimum": 2,
+            "maximum": 50,
+            "unit": "x median"
+        },
+        "snapshotStoreName": {
+            "title": "Snapshot store name",
+            "type": "string",
+            "description": "Named key-value store that holds each profile's previous snapshot so growth deltas survive between runs. Keep the default unless you want two independent monitoring schedules that must not share history.",
+            "editor": "textfield",
+            "default": "tiktok-growth-monitor-state",
+            "prefill": "tiktok-growth-monitor-state",
+            "sectionCaption": "Advanced",
+            "sectionDescription": "Sensible defaults — you only need these for multiple schedules, alerting, or if the base scraper is ever renamed."
+        },
+        "webhookUrl": {
+            "title": "Webhook URL (optional)",
+            "type": "string",
+            "description": "If set, the compact run summary is POSTed here as JSON when the run finishes. Point it at Slack, Make, n8n, Zapier or your own endpoint to get growth and viral-outlier alerts. Leave empty to skip.",
+            "editor": "textfield"
+        },
+        "baseActor": {
+            "title": "Base scraper Actor ID",
+            "type": "string",
+            "description": "The Actor used to fetch the raw TikTok data. Defaults to Clockworks' TikTok Profile Scraper, the most-used TikTok scraper on the Store. Its run is started under YOUR account and billed to you at its own price, on top of this Actor's fee — see the Pricing section of the README. Only change this if the base Actor is renamed.",
+            "editor": "textfield",
+            "default": "clockworks/tiktok-profile-scraper",
+            "prefill": "clockworks/tiktok-profile-scraper"
+        }
+    },
+    "required": ["profiles"]
+}

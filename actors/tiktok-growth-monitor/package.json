@@ -1,0 +1,28 @@
+{
+    "name": "tiktok-growth-monitor",
+    "version": "0.1.0",
+    "type": "module",
+    "description": "Apify Actor: batch TikTok profile monitoring with daily snapshots, growth deltas and viral-outlier alerts.",
+    "private": true,
+    "engines": {
+        "node": ">=22.0.0"
+    },
+    "scripts": {
+        "build": "tsc",
+        "start": "npm run start:dev",
+        "start:dev": "node --enable-source-maps src/main.ts",
+        "start:prod": "node --enable-source-maps dist/main.js",
+        "test": "node --test test/*.test.ts",
+        "smoke": "apify run",
+        "smoke:fresh": "apify run --purge",
+        "apply-store-config": "node scripts/apply-store-config.mjs"
+    },
+    "dependencies": {
+        "apify": "^3.4.2"
+    },
+    "devDependencies": {
+        "@apify/tsconfig": "^0.1.0",
+        "@types/node": "^24.3.0",
+        "typescript": "^5.9.2"
+    }
+}

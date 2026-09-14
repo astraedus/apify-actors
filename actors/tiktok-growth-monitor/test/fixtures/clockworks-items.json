@@ -1,0 +1,157 @@
+[
+    {
+        "id": "7300000000000000001",
+        "text": "welcome to the app #fyp",
+        "createTimeISO": "2026-09-10T12:00:00.000Z",
+        "webVideoUrl": "https://www.tiktok.com/@tiktok/video/7300000000000000001",
+        "playCount": 120000,
+        "diggCount": 9000,
+        "commentCount": 410,
+        "shareCount": 220,
+        "musicMeta": {
+            "musicName": "original sound",
+            "musicAuthor": "tiktok",
+            "playUrl": "https://example.invalid/music1.mp3"
+        },
+        "authorMeta": {
+            "id": "107955",
+            "name": "tiktok",
+            "nickName": "TikTok",
+            "verified": true,
+            "fans": 80000000,
+            "following": 500,
+            "heart": 600000000,
+            "video": 1200,
+            "profileUrl": "https://www.tiktok.com/@tiktok"
+        }
+    },
+    {
+        "id": "7300000000000000002",
+        "text": "part two",
+        "createTimeISO": "2026-09-11T12:00:00.000Z",
+        "webVideoUrl": "https://www.tiktok.com/@tiktok/video/7300000000000000002",
+        "playCount": 100000,
+        "diggCount": 8000,
+        "commentCount": 300,
+        "shareCount": 150,
+        "musicMeta": { "musicName": "a trending song", "musicAuthor": "someone" },
+        "authorMeta": {
+            "id": "107955",
+            "name": "tiktok",
+            "nickName": "TikTok",
+            "verified": true,
+            "fans": 80000000,
+            "following": 500,
+            "heart": 600000000,
+            "video": 1200,
+            "profileUrl": "https://www.tiktok.com/@tiktok"
+        }
+    },
+    {
+        "id": "7300000000000000003",
+        "text": "this one blew up",
+        "createTimeISO": "2026-09-12T12:00:00.000Z",
+        "webVideoUrl": "https://www.tiktok.com/@tiktok/video/7300000000000000003",
+        "playCount": 900000,
+        "diggCount": 70000,
+        "commentCount": 5000,
+        "shareCount": 9000,
+        "musicMeta": { "musicName": "original sound", "musicAuthor": "tiktok" },
+        "authorMeta": {
+            "id": "107955",
+            "name": "tiktok",
+            "nickName": "TikTok",
+            "verified": true,
+            "fans": 80000000,
+            "following": 500,
+            "heart": 600000000,
+            "video": 1200,
+            "profileUrl": "https://www.tiktok.com/@tiktok"
+        }
+    },
+    {
+        "id": "7300000000000000010",
+        "text": "no words needed",
+        "createTimeISO": "2026-09-09T09:00:00.000Z",
+        "webVideoUrl": "https://www.tiktok.com/@khaby.lame/video/7300000000000000010",
+        "playCount": 5000000,
+        "diggCount": 400000,
+        "commentCount": 12000,
+        "shareCount": 30000,
+        "musicMeta": { "musicName": "funny sound", "musicAuthor": "creator" },
+        "authorMeta": {
+            "id": "6749860809650488325",
+            "name": "khaby.lame",
+            "nickName": "Khabane lame",
+            "verified": true,
+            "fans": 162000000,
+            "following": 80,
+            "heart": 2500000000,
+            "video": 1100,
+            "profileUrl": "https://www.tiktok.com/@khaby.lame"
+        }
+    },
+    {
+        "id": "7300000000000000011",
+        "text": "",
+        "createTimeISO": "2026-09-10T09:00:00.000Z",
+        "webVideoUrl": "https://www.tiktok.com/@khaby.lame/video/7300000000000000011",
+        "playCount": 4800000,
+        "diggCount": 380000,
+        "commentCount": 9000,
+        "shareCount": 21000,
+        "musicMeta": {},
+        "authorMeta": {
+            "id": "6749860809650488325",
+            "name": "khaby.lame",
+            "nickName": "Khabane lame",
+            "verified": true,
+            "fans": 162000000,
+            "following": 80,
+            "heart": 2500000000,
+            "video": 1100,
+            "profileUrl": "https://www.tiktok.com/@khaby.lame"
+        }
+    },
+    {
+        "id": "7300000000000000012",
+        "text": "string counters, as the API sometimes returns them",
+        "createTimeISO": "2026-09-11T09:00:00.000Z",
+        "webVideoUrl": "https://www.tiktok.com/@khaby.lame/video/7300000000000000012",
+        "playCount": "5200000",
+        "diggCount": "410000",
+        "commentCount": null,
+        "shareCount": 25000,
+        "authorMeta": {
+            "id": "6749860809650488325",
+            "name": "khaby.lame",
+            "nickName": "Khabane lame",
+            "verified": true,
+            "fans": 162000000,
+            "following": 80,
+            "heart": 2500000000,
+            "video": 1100,
+            "profileUrl": "https://www.tiktok.com/@khaby.lame"
+        }
+    },
+    {
+        "id": "7300000000000000099",
+        "text": "a repost whose real author was never requested",
+        "createTimeISO": "2026-09-11T10:00:00.000Z",
+        "webVideoUrl": "https://www.tiktok.com/@someoneelse/video/7300000000000000099",
+        "playCount": 999999999,
+        "diggCount": 1,
+        "commentCount": 1,
+        "shareCount": 1,
+        "authorMeta": {
+            "name": "someoneelse",
+            "nickName": "Somebody Else",
+            "verified": false,
+            "fans": 10,
+            "following": 10,
+            "heart": 10,
+            "video": 1,
+            "profileUrl": "https://www.tiktok.com/@someoneelse"
+        }
+    }
+]
