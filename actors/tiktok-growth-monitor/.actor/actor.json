@@ -1,0 +1,15 @@
+{
+    "actorSpecification": 1,
+    "name": "tiktok-growth-monitor",
+    "title": "TikTok Growth Monitor",
+    "description": "Track a batch of TikTok profiles over time: follower and view growth deltas, new videos, and viral-outlier alerts, with a webhook summary.",
+    "version": "0.1",
+    "buildTag": "latest",
+    "dockerfile": "./Dockerfile",
+    "input": "./INPUT_SCHEMA.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "minMemoryMbytes": 256,
+    "maxMemoryMbytes": 2048
+}

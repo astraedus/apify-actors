@@ -1,0 +1,39 @@
+{
+    "_comment": [
+        "Everything the Apify PLATFORM owns rather than the build: pay-per-event prices,",
+        "store SEO, and public visibility. These cannot live in actor.json (it has no",
+        "pricing or SEO keys), and clicking them into the Console by hand is not",
+        "reproducible — so they are versioned here and applied with:",
+        "    npm run apply-store-config",
+        "which PUTs them to /v2/acts/<actorId>. Event names MUST stay in sync with the",
+        "Actor.charge() calls in src/main.ts."
+    ],
+    "title": "TikTok Growth Monitor",
+    "description": "Track a batch of TikTok profiles over time: follower and view growth deltas, new videos, and viral-outlier alerts, with a webhook summary.",
+    "seoTitle": "TikTok Growth Monitor - Track Followers, Views & Outliers",
+    "seoDescription": "Monitor any batch of TikTok profiles on a schedule. Daily snapshots, follower and view growth deltas, new-video and viral-outlier alerts via webhook.",
+    "categories": ["SOCIAL_MEDIA"],
+    "pricingInfos": [
+        {
+            "pricingModel": "PAY_PER_EVENT",
+            "pricingPerEvent": {
+                "actorChargeEvents": {
+                    "profile-monitored": {
+                        "eventTitle": "Profile monitored",
+                        "eventDescription": "Charged once per profile per run, only when a growth report is actually produced for it. Profiles the base scraper returns no data for are never charged. This is the analytics layer only — the base TikTok scraper bills you separately at its own price.",
+                        "eventPriceUsd": 0.02,
+                        "isPrimaryEvent": true,
+                        "isOneTimeEvent": false
+                    },
+                    "outlier-alert": {
+                        "eventTitle": "Viral outlier detected",
+                        "eventDescription": "Free ($0.00). Emitted once per video that crosses your viral-outlier threshold, so outlier volume is visible in the run's event breakdown.",
+                        "eventPriceUsd": 0,
+                        "isPrimaryEvent": false,
+                        "isOneTimeEvent": false
+                    }
+                }
+            }
+        }
+    ]
+}

@@ -1,0 +1,43 @@
+{
+    "actorSpecification": 1,
+    "fields": {},
+    "views": {
+        "growth": {
+            "title": "Growth overview",
+            "description": "One row per profile: followers, growth since the last run, new videos and viral outliers.",
+            "transformation": {
+                "fields": [
+                    "username",
+                    "followers",
+                    "followersDelta",
+                    "likes",
+                    "likesDelta",
+                    "videoCount",
+                    "medianViews",
+                    "snapshotAt",
+                    "previousSnapshotAt"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "username": { "label": "Profile" },
+                    "followers": { "label": "Followers" },
+                    "followersDelta": { "label": "Followers +/-" },
+                    "likes": { "label": "Total likes" },
+                    "likesDelta": { "label": "Likes +/-" },
+                    "videoCount": { "label": "Videos" },
+                    "medianViews": { "label": "Median views" },
+                    "snapshotAt": { "label": "Snapshot" },
+                    "previousSnapshotAt": { "label": "Compared to" }
+                }
+            }
+        },
+        "overview": {
+            "title": "Full output",
+            "description": "Every field, including per-video stats, new videos and outliers.",
+            "transformation": {},
+            "display": { "component": "table" }
+        }
+    }
+}
