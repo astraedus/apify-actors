@@ -219,12 +219,36 @@ describe('actor definition', () => {
         }
     });
 
+    test('the SEO title fits the API\'s 60-character cap', () => {
+        // Established by probing PUT /v2/acts/{id}: a longer title is rejected with
+        // "seoTitle must be at most 60 characters long".
+        assert.ok(STORE_LISTING.seoTitle.length > 0);
+        assert.ok(
+            STORE_LISTING.seoTitle.length <= 60,
+            `seoTitle is ${STORE_LISTING.seoTitle.length} chars; the API caps it at 60`,
+        );
+    });
+
     test('the SEO description fits the 160-character budget', () => {
         assert.ok(
             STORE_LISTING.seoDescription.length < 160,
             `seoDescription is ${STORE_LISTING.seoDescription.length} chars`,
         );
-        assert.ok(STORE_LISTING.seoTitle.length > 0);
+    });
+
+    test('the ready-to-apply API payload prices the same events at the same prices', () => {
+        // This payload is applied verbatim once payout info exists, so it must not drift
+        // from the human-readable list beside it or from the names the code charges.
+        const apiEvents = STORE_LISTING.pricingInfoApiPayload
+            .pricingInfos[0].pricingPerEvent.actorChargeEvents;
+        assert.deepEqual(Object.keys(apiEvents).sort(), [EVENT_POST, EVENT_PROFILE].sort());
+        for (const event of STORE_LISTING.pricingInfo.events) {
+            assert.equal(
+                apiEvents[event.eventName].eventPriceUsd,
+                event.eventPriceUsd,
+                `${event.eventName} price differs between the listing and the API payload`,
+            );
+        }
     });
 
     test('the priced event names match the ones the code charges', () => {
