@@ -22,6 +22,7 @@ import {
     DEFAULT_APPS,
     DEFAULT_MAX_REVIEWS_PER_APP,
     DEMO_MAX_REVIEWS_PER_APP,
+    HIGH_VOLUME_DEMO_APPS,
     isZeroConfigRun,
     parseInput,
     type RawInput,
@@ -231,10 +232,12 @@ test('the demo cap is actually enforced on the emitted rows', async (t) => {
     assert.equal(emitted.length, DEMO_MAX_REVIEWS_PER_APP);
 });
 
-test('GUARD: the non-empty guarantee does not depend on Apple', () => {
+test('GUARD: the non-empty guarantee rests on neither Apple nor our own apps', () => {
     // Apple's public RSS feed refuses to serve data often enough that it cannot
     // be the only thing standing between us and an empty daily test — it did
-    // exactly that on 2026-09-14. Google Play alone must carry the demo.
+    // exactly that on three runs on 2026-09-14. Nor can our own apps carry it:
+    // between them they have a handful of US reviews, and one has none at all,
+    // so a single pruned review would take the default run to zero.
     const parsed = parseInput(null);
     const checks = buildCheckList(parsed.apps, parsed.countries);
     const googlePlay = checks.filter((c) => c.store === 'google-play');
@@ -246,6 +249,23 @@ test('GUARD: the non-empty guarantee does not depend on Apple', () => {
             + 'yet still leaves another that can carry the run',
     );
     assert.ok(apple.length >= 1, 'the default input must still exercise the Apple code path');
+
+    const highVolume = googlePlay.filter((c) =>
+        (HIGH_VOLUME_DEMO_APPS as readonly string[]).includes(c.appId));
+    assert.ok(
+        highVolume.length >= 1,
+        'at least one default Google Play target must be a high-volume app whose review feed is never '
+            + 'empty — otherwise the daily reliability test depends on our own low-traffic apps',
+    );
+
+    const OURS = /^(dev\.astraedus\.|com\.raeduslabs\.)/;
+    for (const check of highVolume) {
+        assert.doesNotMatch(
+            check.appId,
+            OURS,
+            `${check.appId} is one of our own apps, so it cannot be what guarantees a non-empty demo`,
+        );
+    }
 });
 
 test('the run note tells a demo reader why nothing is remembered', () => {

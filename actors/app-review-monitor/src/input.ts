@@ -10,18 +10,30 @@ import { assertSafeOutboundUrl, nonStandardPortAllowed } from './safe-url.ts';
 import { DEFAULT_STATE_STORE_NAME } from './state.ts';
 
 /**
+ * Google Play apps big enough that their review feed is never empty.
+ *
+ * The demo run's non-empty guarantee rests on these, and deliberately not on our
+ * own apps: two of the three carry a handful of US reviews between them, and one
+ * has none at all, so a single pruned review could take the default run to zero.
+ */
+export const HIGH_VOLUME_DEMO_APPS = ['com.whatsapp'] as const;
+
+/**
  * Zero-config defaults. These are the values the Store's "Start" button runs
  * with, so they must always produce rows inside Apify's 5-minute automated test.
  *
- * Three of our own Android apps plus Facebook on the App Store: the Facebook
- * entry both exercises the Apple code path and guarantees a non-empty result on
- * every run, because a top-10 app gathers new US reviews continuously — a
- * monitor whose default run went empty after day one would look broken.
+ * Three of our own Android apps, one high-volume third-party app, and Facebook
+ * on the App Store. The Apple entry exercises the Apple code path but cannot be
+ * relied on for the non-empty guarantee — its public RSS feed refused to serve
+ * data on three separate runs on 2026-09-14 — so a high-volume Google Play app
+ * carries that instead. A monitor whose default run went empty would look
+ * broken, and Apify's daily test would eventually label it Under Maintenance.
  */
 export const DEFAULT_APPS = [
     'dev.astraedus.nudge',
     'com.raeduslabs.origo',
     'com.raeduslabs.soulsyncapp',
+    ...HIGH_VOLUME_DEMO_APPS,
     '284882215',
 ] as const;
 

@@ -13,12 +13,14 @@
                 "dev.astraedus.nudge",
                 "com.raeduslabs.origo",
                 "com.raeduslabs.soulsyncapp",
+                "com.whatsapp",
                 "284882215"
             ],
             "default": [
                 "dev.astraedus.nudge",
                 "com.raeduslabs.origo",
                 "com.raeduslabs.soulsyncapp",
+                "com.whatsapp",
                 "284882215"
             ],
             "sectionCaption": "Apps & countries",
@@ -29,8 +31,12 @@
             "type": "array",
             "description": "Two-letter ISO country codes for the storefronts to check, e.g. us, gb, de. Each app is checked in every country listed, and each app+country pair is billed as one 'app-checked' event. A country baked into a store URL wins for that app.",
             "editor": "stringList",
-            "prefill": ["us"],
-            "default": ["us"]
+            "prefill": [
+                "us"
+            ],
+            "default": [
+                "us"
+            ]
         },
         "maxReviewsPerApp": {
             "title": "Max reviews per app",

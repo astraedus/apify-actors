@@ -6,7 +6,7 @@ Most review scrapers re-download the same backlog every run and hand you a pile 
 
 ## Quick start
 
-1. Press **Start**. The default input monitors four example apps (three on Google Play, one on the App Store) and finishes in well under a minute — no configuration, no account linking.
+1. Press **Start**. The default input monitors five example apps (four on Google Play, one on the App Store) and finishes in well under a minute — no configuration, no account linking.
 2. Open the **Dataset** tab to see the reviews it found.
 3. Replace the `apps` list with your own, hit **Start** again, then **Schedule** it (see [Scheduling](#scheduling)).
 
