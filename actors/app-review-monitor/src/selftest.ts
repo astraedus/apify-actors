@@ -12,6 +12,7 @@ import { CHARGEABLE_EVENTS } from './charging.ts';
 import { selectNewReviews } from './incremental.ts';
 import { parseInput } from './input.ts';
 import { buildRunNote, isTransientSourceFailure } from './outcome.ts';
+import { UnsafeUrlError, assertSafeOutboundUrl } from './safe-url.ts';
 import { AppleFeedUnavailableError, parseAppleRssPage } from './sources/apple.ts';
 import { normaliseGooglePlayReview } from './sources/google-play.ts';
 import { buildWebhookPayload } from './webhook.ts';
@@ -38,6 +39,22 @@ if (!isTransientSourceFailure(new AppleFeedUnavailableError('1', 'us', 5))) {
     throw new Error('An unavailable store feed must classify as transient, or a store outage fails customer runs.');
 }
 if (!buildRunNote(1, 0, [], []).includes('every app was reached')) throw new Error('Run note broken.');
+
+// The SSRF guard is a build-time gate, not just a unit test: an image that
+// would happily POST a run summary to the cloud metadata endpoint must never
+// be produced, whatever happened to the tests.
+for (const hostile of ['http://0xa9.0xfe.0xa9.0xfe/', 'http://127.1/hook', 'http://[::1]/hook', 'http://localhost/hook']) {
+    let refused = false;
+    try {
+        assertSafeOutboundUrl(hostile, { label: 'webhookUrl' });
+    } catch (error) {
+        refused = error instanceof UnsafeUrlError;
+    }
+    if (!refused) throw new Error(`SSRF guard let ${hostile} through.`);
+}
+if (assertSafeOutboundUrl('https://hooks.example.com/x').hostname !== 'hooks.example.com') {
+    throw new Error('SSRF guard rejects a legitimate public webhook.');
+}
 
 console.log(
     `Self-test OK — ${checks.length} default checks, events: ${CHARGEABLE_EVENTS.join(', ')}, state store: ${DEFAULT_STATE_STORE_NAME}`,

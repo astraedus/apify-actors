@@ -27,6 +27,7 @@
 
 import { log } from 'apify';
 import { storeUrl } from '../detect.ts';
+import { UnsafeUrlError, safeFetch } from '../safe-url.ts';
 import type { ReviewRow } from '../types.ts';
 
 /** Apple caps this feed at 10 pages of 50 reviews. */
@@ -187,10 +188,14 @@ async function fetchJson(url: string): Promise<unknown> {
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
         try {
-            const response = await fetch(url, {
+            // safeFetch, not fetch: Apple's own hosts are fixed and trusted, but
+            // `redirect: 'follow'` would let a hijacked/compromised 3xx walk this
+            // request onto a private address. Redirects are followed by hand and
+            // re-validated per hop instead.
+            const response = await safeFetch(url, {
                 headers: { accept: 'application/json', 'user-agent': USER_AGENT },
                 signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
-            });
+            }, { label: 'App Store feed URL' });
             // 4xx other than 429 will not fix itself; fail immediately.
             if (!response.ok && response.status !== 429 && response.status < 500) {
                 throw new Error(`HTTP ${response.status} ${response.statusText} from ${url}`);
@@ -198,6 +203,9 @@ async function fetchJson(url: string): Promise<unknown> {
             if (response.ok) return await response.json();
             lastError = new Error(`HTTP ${response.status} ${response.statusText} from ${url}`);
         } catch (error) {
+            // A refused redirect is not a transport hiccup: retrying it four
+            // times with backoff only wastes the run's clock.
+            if (error instanceof UnsafeUrlError) throw error;
             if ((error as Error).message.startsWith('HTTP 4')) throw error;
             lastError = error as Error;
         }

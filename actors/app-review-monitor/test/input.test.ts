@@ -9,6 +9,7 @@ import {
     MAX_REVIEWS_LIMIT,
     parseInput,
 } from '../src/input.ts';
+import { UnsafeUrlError } from '../src/safe-url.ts';
 import { DEFAULT_STATE_STORE_NAME } from '../src/state.ts';
 
 test('a completely empty input yields the documented zero-config defaults', () => {
@@ -97,6 +98,32 @@ test('webhookUrl is validated as an http(s) URL', () => {
     assert.equal(parseInput({ webhookUrl: '' }).webhookUrl, null);
     assert.throws(() => parseInput({ webhookUrl: 'not-a-url' }), /not a valid URL/);
     assert.throws(() => parseInput({ webhookUrl: 'ftp://example.com' }), /must be an http\(s\) URL/);
+});
+
+test('webhookUrl is refused at input time when it points inside the network (SSRF)', () => {
+    // The full matrix lives in test/safe-url.test.ts; this asserts the guard is
+    // actually WIRED to the input, so a hostile URL costs the user nothing —
+    // it fails before a single store request or charge.
+    for (const hostile of [
+        'http://0xa9.0xfe.0xa9.0xfe/hook',
+        'http://0251.0376.0251.0376/hook',
+        'http://127.1/hook',
+        'http://0177.0.1/hook',
+        'http://169.254.169.254/latest/meta-data/',
+        'http://127.0.0.1:8080/hook',
+        'http://[::1]/hook',
+        'http://localhost/hook',
+        'http://vault.internal/hook',
+        'https://user:pass@hooks.example.com/hook',
+        'https://hooks.example.com:9200/hook',
+    ]) {
+        assert.throws(() => parseInput({ webhookUrl: hostile }), UnsafeUrlError, `${hostile} must be refused`);
+    }
+
+    assert.equal(
+        parseInput({ webhookUrl: 'https://hooks.example.com/x' }).webhookUrl,
+        'https://hooks.example.com/x',
+    );
 });
 
 test('too many apps in one run is refused with a clear limit', () => {
