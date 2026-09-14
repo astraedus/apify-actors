@@ -6,9 +6,11 @@ Most review scrapers re-download the same backlog every run and hand you a pile 
 
 ## Quick start
 
-1. Press **Start**. The default input monitors four real apps (three on Google Play, one on the App Store) and finishes in well under a minute — no configuration, no account linking.
+1. Press **Start**. The default input monitors four example apps (three on Google Play, one on the App Store) and finishes in well under a minute — no configuration, no account linking.
 2. Open the **Dataset** tab to see the reviews it found.
 3. Replace the `apps` list with your own, hit **Start** again, then **Schedule** it (see [Scheduling](#scheduling)).
+
+The untouched default input is a **demo run**: it keeps no memory between runs, so you can press Start as often as you like and always get reviews back. Change anything that shapes the output — your own `apps`, another country, a rating filter, your own `stateStoreName` — and you get the real thing: state persists between runs and each run returns only reviews you have not received before.
 
 You can paste any of these into `apps` and the store is detected automatically:
 
@@ -102,6 +104,8 @@ The actor is built to be scheduled; running it once by hand only gives you the b
 **Two schedules over the same apps:** give each one a different `stateStoreName` (for example `hourly-alerts` and `weekly-digest`) so they do not consume each other's new reviews.
 
 The seen-review IDs live in a named key-value store on your own account (default `app-review-monitor-state`), one record per app+country. Set `resetState` to `true` for a single run to forget them and re-emit a fresh baseline.
+
+The one exception is the demo run described in [Quick start](#quick-start): while every input is still at its default, the Actor keeps its state in the run's own storage, which is discarded when the run ends. That is what lets the example input return reviews every time instead of going quiet after the first run. Setting `apps` to your own apps is enough to switch to the persistent named store.
 
 ## Pricing
 

@@ -28,6 +28,13 @@ export const DEFAULT_APPS = [
 export const DEFAULT_COUNTRIES = ['us'] as const;
 export const DEFAULT_MAX_REVIEWS_PER_APP = 200;
 
+/**
+ * Reviews per app in a demo run. A demo re-emits its baseline every time, so it
+ * is deliberately small: enough to show what the output looks like, cheap enough
+ * to run every day forever.
+ */
+export const DEMO_MAX_REVIEWS_PER_APP = 10;
+
 /** Hard ceiling per app+country; protects both runtime and the user's bill. */
 export const MAX_REVIEWS_LIMIT = 1000;
 export const MAX_APPS = 100;
@@ -42,6 +49,12 @@ export interface ParsedInput {
     webhookUrl: string | null;
     stateStoreName: string;
     resetState: boolean;
+    /**
+     * True when the caller configured nothing at all, so this run is the
+     * zero-config demo: Apify's daily reliability test, or somebody pressing
+     * Start to see what the Actor does. See `isZeroConfigRun`.
+     */
+    isDemoRun: boolean;
 }
 
 export type RawInput = Record<string, unknown> | null | undefined;
@@ -90,6 +103,43 @@ function asWebhookUrl(value: unknown): string | null {
     }).toString();
 }
 
+/** Set equality, so the order the apps were listed in does not matter. */
+function sameSet(a: readonly string[], b: readonly string[]): boolean {
+    if (a.length !== b.length) return false;
+    const left = new Set(a);
+    if (left.size !== new Set(b).size) return false;
+    return b.every((value) => left.has(value));
+}
+
+/**
+ * True when NOTHING that shapes the output was configured.
+ *
+ * This cannot be answered by asking whether `apps` was supplied: Apify
+ * materialises the input schema's `default` values into the stored INPUT, so an
+ * empty `{}` POST reaches the Actor with `apps`, `countries`, `maxReviewsPerApp`
+ * and `stateStoreName` already filled in. An absent field is therefore
+ * indistinguishable from a defaulted one, and any check for "no apps given"
+ * would be dead code on the platform.
+ *
+ * So the question is asked the other way round: is every output-shaping field
+ * still exactly the built-in default? Changing any one of them — your own apps,
+ * another country, a rating filter, your own state store — opts into the real
+ * product with its persistent cross-run state. That keeps the rule honest in
+ * both directions: Apify's daily test and a first-time Start always get data,
+ * and a caller who configured something always gets true incremental behaviour.
+ */
+export function isZeroConfigRun(input: Omit<ParsedInput, 'isDemoRun'>): boolean {
+    return (
+        sameSet(input.apps, DEFAULT_APPS)
+        && sameSet(input.countries, DEFAULT_COUNTRIES)
+        && input.maxReviewsPerApp === DEFAULT_MAX_REVIEWS_PER_APP
+        && input.onlyNew
+        && input.minRating == null
+        && input.maxRating == null
+        && input.stateStoreName === DEFAULT_STATE_STORE_NAME
+    );
+}
+
 export function parseInput(raw: RawInput): ParsedInput {
     const input = raw ?? {};
 
@@ -120,7 +170,7 @@ export function parseInput(raw: RawInput): ParsedInput {
 
     const stateStoreName = String(input.stateStoreName ?? '').trim() || DEFAULT_STATE_STORE_NAME;
 
-    return {
+    const parsed: Omit<ParsedInput, 'isDemoRun'> = {
         apps,
         countries,
         maxReviewsPerApp,
@@ -130,5 +180,15 @@ export function parseInput(raw: RawInput): ParsedInput {
         webhookUrl: asWebhookUrl(input.webhookUrl),
         stateStoreName,
         resetState: Boolean(input.resetState),
+    };
+
+    const isDemoRun = isZeroConfigRun(parsed);
+
+    return {
+        ...parsed,
+        // A demo re-emits its baseline on every run, so it is capped low: the
+        // point is to show the shape of the output, not to ship a backlog.
+        maxReviewsPerApp: isDemoRun ? DEMO_MAX_REVIEWS_PER_APP : parsed.maxReviewsPerApp,
+        isDemoRun,
     };
 }

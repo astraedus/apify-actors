@@ -6,6 +6,7 @@ import {
     DEFAULT_APPS,
     DEFAULT_COUNTRIES,
     DEFAULT_MAX_REVIEWS_PER_APP,
+    DEMO_MAX_REVIEWS_PER_APP,
     MAX_REVIEWS_LIMIT,
     parseInput,
 } from '../src/input.ts';
@@ -17,7 +18,12 @@ test('a completely empty input yields the documented zero-config defaults', () =
         const parsed = parseInput(empty);
         assert.deepEqual(parsed.apps, [...DEFAULT_APPS]);
         assert.deepEqual(parsed.countries, [...DEFAULT_COUNTRIES]);
-        assert.equal(parsed.maxReviewsPerApp, DEFAULT_MAX_REVIEWS_PER_APP);
+        // An untouched input is the demo run, which is capped low because it
+        // re-emits its baseline every time. DEFAULT_MAX_REVIEWS_PER_APP is what
+        // any configured run gets; see the demo-run tests below.
+        assert.equal(parsed.isDemoRun, true);
+        assert.equal(parsed.maxReviewsPerApp, DEMO_MAX_REVIEWS_PER_APP);
+        assert.notEqual(DEMO_MAX_REVIEWS_PER_APP, DEFAULT_MAX_REVIEWS_PER_APP);
         assert.equal(parsed.onlyNew, true);
         assert.equal(parsed.minRating, null);
         assert.equal(parsed.maxRating, null);

@@ -12,6 +12,17 @@ import type { Store } from './detect.ts';
 
 export const DEFAULT_STATE_STORE_NAME = 'app-review-monitor-state';
 
+/**
+ * Which key-value store this run should keep its seen-review ids in.
+ *
+ * `null` means the run's own default store, i.e. no memory between runs. Pulled
+ * out of main.ts as a pure function so the choice that decides whether a run can
+ * ever return an empty dataset is unit-tested rather than trusted.
+ */
+export function stateStoreNameFor(input: { isDemoRun: boolean; stateStoreName: string }): string | null {
+    return input.isDemoRun ? null : input.stateStoreName;
+}
+
 interface SeenRecord {
     /** Most-recent-first review ids. */
     ids: string[];
@@ -37,8 +48,21 @@ export class SeenStore {
         this.#readOnly = readOnly;
     }
 
-    static async open(storeName: string, readOnly = false): Promise<SeenStore> {
-        const kv = await Actor.openKeyValueStore(storeName);
+    /**
+     * Open the store holding the seen-review ids.
+     *
+     * `storeName: null` opens the RUN'S OWN default key-value store, which is
+     * created fresh for every run and thrown away with it. That is ephemeral by
+     * construction, so a run using it always behaves like a first run. It is
+     * what the zero-config demo uses, so that pressing Start — or Apify's daily
+     * reliability test, which requires a non-empty dataset — returns reviews on
+     * day 100 exactly as it did on day 1. Real callers pass a name and keep the
+     * named store, which is the whole point of an incremental monitor.
+     */
+    static async open(storeName: string | null, readOnly = false): Promise<SeenStore> {
+        const kv = storeName === null
+            ? await Actor.openKeyValueStore()
+            : await Actor.openKeyValueStore(storeName);
         return new SeenStore(kv, readOnly);
     }
 

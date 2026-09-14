@@ -27,14 +27,33 @@ export function isTransientSourceFailure(error: unknown): boolean {
     );
 }
 
+export interface RunNoteOptions {
+    /**
+     * True when this was the zero-config demo run, which keeps no state between
+     * runs. Saying so matters: without it, a reader comparing two demo runs
+     * would reasonably conclude the de-duplication is broken.
+     */
+    demoRun?: boolean;
+}
+
 /** One line a human can read without opening the log. */
 export function buildRunNote(
     checkCount: number,
     newReviews: number,
     transientFailures: readonly AppCheckResult[],
     realFailures: readonly AppCheckResult[],
+    options: RunNoteOptions = {},
 ): string {
     const parts = [`Checked ${checkCount} app/country pair(s); emitted ${newReviews} new review(s).`];
+
+    if (options.demoRun) {
+        parts.push(
+            'This was a zero-configuration demo run over the example apps, so it used per-run state that is '
+                + 'discarded when the run ends: every app counted as new and a small baseline was emitted. '
+                + 'Set `apps` to your own apps for real monitoring, where seen reviews are remembered between '
+                + 'runs and each run returns only what you have not received before.',
+        );
+    }
 
     if (transientFailures.length > 0) {
         parts.push(

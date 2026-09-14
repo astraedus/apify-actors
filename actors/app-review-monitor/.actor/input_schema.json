@@ -7,7 +7,7 @@
         "apps": {
             "title": "Apps to monitor",
             "type": "array",
-            "description": "Google Play package names (dev.astraedus.nudge), Apple numeric app IDs (284882215), or full store URLs from either store. The store is detected automatically.",
+            "description": "Google Play package names (dev.astraedus.nudge), Apple numeric app IDs (284882215), or full store URLs from either store. The store is detected automatically. Left exactly as-is, this is a demo run that keeps no memory between runs, so pressing Start always returns reviews; set your own apps here to switch on real incremental monitoring.",
             "editor": "stringList",
             "prefill": [
                 "dev.astraedus.nudge",
@@ -80,7 +80,7 @@
         "stateStoreName": {
             "title": "State key-value store name",
             "type": "string",
-            "description": "Named key-value store holding the already-seen review IDs. Change it to run two independent monitors (for example a daily digest and a weekly report) over the same apps without them stealing each other's reviews.",
+            "description": "Named key-value store holding the already-seen review IDs. Change it to run two independent monitors (for example a daily digest and a weekly report) over the same apps without them stealing each other's reviews. Ignored on the untouched demo input, which deliberately keeps its state in the run's own storage so the example always returns data.",
             "editor": "textfield",
             "prefill": "app-review-monitor-state",
             "default": "app-review-monitor-state",

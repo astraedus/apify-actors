@@ -14,7 +14,7 @@ import { CHARGEABLE_EVENTS, EVENT_APP_CHECKED, EVENT_REVIEW_EMITTED, chargeSafel
 import { applyRatingFilter, averageRating, lowestRated, selectNewReviews } from './incremental.ts';
 import { parseInput } from './input.ts';
 import { buildRunNote, isTransientSourceFailure } from './outcome.ts';
-import { SeenStore } from './state.ts';
+import { SeenStore, stateStoreNameFor } from './state.ts';
 import { fetchAppleReviews } from './sources/apple.ts';
 import { fetchGooglePlayReviews } from './sources/google-play.ts';
 import type { AppCheckResult, ReviewRow } from './types.ts';
@@ -34,7 +34,16 @@ try {
             `onlyNew=${input.onlyNew}, maxReviewsPerApp=${input.maxReviewsPerApp}.`,
     );
 
-    const seenStore = await SeenStore.open(input.stateStoreName);
+    if (input.isDemoRun) {
+        log.info(
+            'Zero-configuration demo run: using this run\'s own key-value store for the seen-review state, so '
+                + `every app is treated as new and up to ${input.maxReviewsPerApp} review(s) each are emitted. `
+                + 'Set `apps` to your own apps to switch on real incremental monitoring, where state persists '
+                + `in the named store "${input.stateStoreName}" and each run returns only what it has not sent before.`,
+        );
+    }
+
+    const seenStore = await SeenStore.open(stateStoreNameFor(input));
     const results: AppCheckResult[] = [];
     let totalPushed = 0;
 
@@ -133,7 +142,9 @@ try {
     const failed = results.filter((r) => r.error);
     const transientFailures = failed.filter((r) => r.transient);
     const realFailures = failed.filter((r) => !r.transient);
-    const runNote = buildRunNote(results.length, totalPushed, transientFailures, realFailures);
+    const runNote = buildRunNote(results.length, totalPushed, transientFailures, realFailures, {
+        demoRun: input.isDemoRun,
+    });
 
     log.info(
         `Done. ${totalPushed} new review(s) across ${results.length} check(s)` +
