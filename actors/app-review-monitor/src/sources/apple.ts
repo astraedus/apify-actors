@@ -36,6 +36,15 @@ export const APPLE_PAGE_SIZE = 50;
 const REQUEST_TIMEOUT_MS = 20_000;
 const MAX_ATTEMPTS = 4;
 const BACKOFF_BASE_MS = 2_000;
+
+/**
+ * Extra attempts when page 1 comes back VALID BUT EMPTY for an app that
+ * demonstrably has ratings. Deliberately small and short: the default run has to
+ * finish inside Apify's 5-minute automated-test window even when Apple is down
+ * for every app in the list.
+ */
+const EMPTY_FEED_RETRIES = 2;
+const EMPTY_FEED_RETRY_DELAY_MS = 1_500;
 const USER_AGENT = 'apify-app-review-monitor/1.0 (+https://apify.com/astraedus/app-review-monitor)';
 
 /** The app id does not exist in that storefront — the user's input is wrong. */
@@ -238,11 +247,31 @@ export async function fetchAppleReviews(
         throw new AppleAppNotFoundError(appId, country);
     }
     const appName = meta?.name ?? null;
+    const ratingCount = meta?.ratingCount ?? 0;
+    /** The app is known to have reviews, so an empty page 1 is a fault worth retrying. */
+    const expectsReviews = ratingCount > 0 || meta === null;
     const reviews: ReviewRow[] = [];
 
     for (let page = 1; page <= APPLE_MAX_PAGES && reviews.length < limit; page += 1) {
-        const payload = await fetchJson(appleFeedUrl(appId, country, page));
-        const rows = parseAppleRssPage(payload, { appId, appName, country });
+        let rows = parseAppleRssPage(await fetchJson(appleFeedUrl(appId, country, page)), {
+            appId,
+            appName,
+            country,
+        });
+
+        // Apple intermittently answers 200 with a valid but empty feed. On page 1
+        // of an app we know has reviews, give it a couple of short retries before
+        // concluding the feed is unavailable.
+        for (let retry = 1; rows.length === 0 && page === 1 && expectsReviews && retry <= EMPTY_FEED_RETRIES; retry += 1) {
+            log.debug(`Empty App Store feed for ${appId}/${country}; retry ${retry}/${EMPTY_FEED_RETRIES}.`);
+            await sleep(EMPTY_FEED_RETRY_DELAY_MS);
+            rows = parseAppleRssPage(await fetchJson(appleFeedUrl(appId, country, page)), {
+                appId,
+                appName,
+                country,
+            });
+        }
+
         if (rows.length === 0) break;
         reviews.push(...rows);
         // A short page means the feed is exhausted; stop rather than burn a request.
@@ -251,8 +280,7 @@ export async function fetchAppleReviews(
 
     if (reviews.length === 0) {
         // An empty feed means one of two very different things. Say which.
-        const ratingCount = meta?.ratingCount ?? 0;
-        if (ratingCount > 0 || meta === null) {
+        if (expectsReviews) {
             throw new AppleFeedUnavailableError(appId, country, ratingCount);
         }
         log.info(`App ${appId} has no ratings in the "${country}" App Store yet — nothing to monitor.`);

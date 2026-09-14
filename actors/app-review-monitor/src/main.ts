@@ -13,6 +13,7 @@ import { buildCheckList, storeUrl } from './detect.ts';
 import { CHARGEABLE_EVENTS, EVENT_APP_CHECKED, EVENT_REVIEW_EMITTED, chargeSafely, remainingReviewBudget } from './charging.ts';
 import { applyRatingFilter, averageRating, lowestRated, selectNewReviews } from './incremental.ts';
 import { parseInput } from './input.ts';
+import { buildRunNote, isTransientSourceFailure } from './outcome.ts';
 import { SeenStore } from './state.ts';
 import { fetchAppleReviews } from './sources/apple.ts';
 import { fetchGooglePlayReviews } from './sources/google-play.ts';
@@ -59,7 +60,14 @@ try {
             await chargeSafely(EVENT_APP_CHECKED);
         } catch (error) {
             const message = (error as Error).message;
-            log.exception(error as Error, `Failed to check ${label}; continuing with the remaining apps.`);
+            const transient = isTransientSourceFailure(error);
+            if (transient) {
+                // An expected, self-healing condition: log it plainly, with no
+                // stack trace, so a store outage does not read like a crash.
+                log.warning(`${label}: ${message} Skipping this app; the next run retries it.`);
+            } else {
+                log.exception(error as Error, `Failed to check ${label}; continuing with the remaining apps.`);
+            }
             results.push({
                 store,
                 appId,
@@ -71,6 +79,7 @@ try {
                 lowestReviews: [],
                 firstRun: false,
                 error: message,
+                transient,
             });
             continue;
         }
@@ -121,30 +130,41 @@ try {
         );
     }
 
-    if (input.webhookUrl) {
-        await postWebhook(input.webhookUrl, buildWebhookPayload(results));
-    }
-
     const failed = results.filter((r) => r.error);
+    const transientFailures = failed.filter((r) => r.transient);
+    const realFailures = failed.filter((r) => !r.transient);
+    const runNote = buildRunNote(results.length, totalPushed, transientFailures, realFailures);
+
     log.info(
         `Done. ${totalPushed} new review(s) across ${results.length} check(s)` +
             `${failed.length > 0 ? `, ${failed.length} check(s) failed` : ''}.`,
     );
-
-    // Every check failing is a real failure — surface it so the run is marked
-    // failed rather than silently succeeding with an empty dataset.
-    if (results.length > 0 && failed.length === results.length) {
-        throw new Error(
-            `All ${results.length} checks failed. First error: ${failed[0]?.error ?? 'unknown'}`,
+    if (transientFailures.length > 0) {
+        log.warning(
+            `${transientFailures.length} app(s) could not be checked because the store declined to serve data: ` +
+                `${transientFailures.map((r) => `${r.store}:${r.appId}:${r.country}`).join(', ')}. ` +
+                'Nothing was marked as seen for them, so the next run picks up everything they missed.',
         );
+    }
+
+    if (input.webhookUrl) {
+        await postWebhook(input.webhookUrl, buildWebhookPayload(results, runNote));
     }
 
     await Actor.setValue('RUN_SUMMARY', {
         checkedAt: new Date().toISOString(),
         chargeableEvents: CHARGEABLE_EVENTS,
         totalNewReviews: totalPushed,
+        runNote,
         checks: results.map(({ lowestReviews: _lowest, ...rest }) => rest),
     });
+
+    // A store refusing to serve data is not our customer's failed run: the next
+    // scheduled run recovers on its own and nothing was lost or billed. Only a
+    // failure the user could act on (bad app ID, bad input) fails the run.
+    if (results.length > 0 && realFailures.length === results.length) {
+        throw new Error(`All ${results.length} checks failed. First error: ${realFailures[0]?.error ?? 'unknown'}`);
+    }
 } finally {
     await Actor.exit();
 }

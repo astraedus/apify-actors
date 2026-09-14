@@ -11,7 +11,8 @@ import { buildCheckList, detectAppTarget } from './detect.ts';
 import { CHARGEABLE_EVENTS } from './charging.ts';
 import { selectNewReviews } from './incremental.ts';
 import { parseInput } from './input.ts';
-import { parseAppleRssPage } from './sources/apple.ts';
+import { buildRunNote, isTransientSourceFailure } from './outcome.ts';
+import { AppleFeedUnavailableError, parseAppleRssPage } from './sources/apple.ts';
 import { normaliseGooglePlayReview } from './sources/google-play.ts';
 import { buildWebhookPayload } from './webhook.ts';
 import { DEFAULT_STATE_STORE_NAME } from './state.ts';
@@ -33,6 +34,10 @@ if (normaliseGooglePlayReview({}, { appId: '1', appName: null, country: 'us' }) 
     throw new Error('Google Play normaliser should reject a review with no id.');
 }
 if (buildWebhookPayload([]).totals.appsChecked !== 0) throw new Error('Webhook payload broken.');
+if (!isTransientSourceFailure(new AppleFeedUnavailableError('1', 'us', 5))) {
+    throw new Error('An unavailable store feed must classify as transient, or a store outage fails customer runs.');
+}
+if (!buildRunNote(1, 0, [], []).includes('every app was reached')) throw new Error('Run note broken.');
 
 console.log(
     `Self-test OK — ${checks.length} default checks, events: ${CHARGEABLE_EVENTS.join(', ')}, state store: ${DEFAULT_STATE_STORE_NAME}`,

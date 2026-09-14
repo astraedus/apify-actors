@@ -163,7 +163,9 @@ test('README leads with a quick start and documents scheduling and limits', () =
 
 test('GUARD: the store SEO metadata fits what Google and Apify will show', () => {
     const seo = readJson('.actor/store_listing.json');
-    assert.ok(seo.seoTitle.length > 0 && seo.seoTitle.length <= 70, `seoTitle is ${seo.seoTitle.length} chars`);
+    // 60 is an UNDOCUMENTED hard limit on PUT /v2/acts: over it the API rejects
+    // the whole update with `schema-validation`. Measured, not read off the docs.
+    assert.ok(seo.seoTitle.length > 0 && seo.seoTitle.length <= 60, `seoTitle is ${seo.seoTitle.length} chars, max 60`);
     assert.ok(
         seo.seoDescription.length > 0 && seo.seoDescription.length < 160,
         `seoDescription must be under 160 chars, got ${seo.seoDescription.length}`,

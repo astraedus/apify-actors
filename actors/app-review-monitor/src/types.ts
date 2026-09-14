@@ -52,4 +52,11 @@ export interface AppCheckResult {
     firstRun: boolean;
     /** Populated when the store could not be reached; the run continues. */
     error?: string;
+    /**
+     * True when the failure was the store declining to serve data (rate limiting,
+     * an empty-but-valid feed, a 5xx) rather than anything the user can fix.
+     * Transient failures never fail the run and are re-fetched from scratch next
+     * time, because no state was advanced for them.
+     */
+    transient?: boolean;
 }

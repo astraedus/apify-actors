@@ -16,7 +16,9 @@ const MAX_TEXT_CHARS = 500;
 export interface WebhookPayload {
     actor: 'app-review-monitor';
     runAt: string;
-    totals: { appsChecked: number; newReviews: number; errors: number };
+    /** One plain-English line summarising the run, including any skipped apps. */
+    runNote: string;
+    totals: { appsChecked: number; newReviews: number; errors: number; skipped: number };
     apps: Array<{
         store: string;
         appId: string;
@@ -26,6 +28,8 @@ export interface WebhookPayload {
         avgRating: number | null;
         firstRun: boolean;
         error?: string;
+        /** True when the error was the store declining to serve data; the next run retries. */
+        skipped?: boolean;
         lowestReviews: Array<{
             reviewId: string;
             rating: number | null;
@@ -50,14 +54,16 @@ function trimReview(r: ReviewRow) {
     };
 }
 
-export function buildWebhookPayload(results: readonly AppCheckResult[]): WebhookPayload {
+export function buildWebhookPayload(results: readonly AppCheckResult[], runNote = ''): WebhookPayload {
     return {
         actor: 'app-review-monitor',
         runAt: new Date().toISOString(),
+        runNote,
         totals: {
             appsChecked: results.length,
             newReviews: results.reduce((sum, r) => sum + r.newCount, 0),
-            errors: results.filter((r) => r.error).length,
+            errors: results.filter((r) => r.error && !r.transient).length,
+            skipped: results.filter((r) => r.transient).length,
         },
         apps: results.map((r) => ({
             store: r.store,
@@ -68,6 +74,7 @@ export function buildWebhookPayload(results: readonly AppCheckResult[]): Webhook
             avgRating: r.avgRating,
             firstRun: r.firstRun,
             ...(r.error ? { error: r.error } : {}),
+            ...(r.transient ? { skipped: true } : {}),
             lowestReviews: r.lowestReviews.slice(0, MAX_LOWEST_REVIEWS).map(trimReview),
         })),
     };
