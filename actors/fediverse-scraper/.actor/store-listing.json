@@ -1,0 +1,31 @@
+{
+    "_comment": [
+        "Apify accepts NONE of this through actor.json, the CLI or the API -- verified against",
+        "docs.apify.com/platform/actors/development/actor-definition/actor-json (no seo/pricing",
+        "keys exist) and docs.apify.com/platform/actors/publishing (Console-only workflow).",
+        "This file is the repo-side source of truth for what a human types into",
+        "Apify Console -> Development -> My Actors -> fediverse-scraper -> Publishing.",
+        "The event names below MUST match src/sink.js exactly: charging an event the Console",
+        "does not know about returns an error and the run loses its billing."
+    ],
+    "seoTitle": "Mastodon & Bluesky Scraper - Profiles, Posts, Hashtags (Fediverse)",
+    "seoDescription": "Scrape Mastodon and Bluesky profiles, posts and hashtags via official public APIs. One normalized schema, no login, pay only for what you extract.",
+    "categories": ["SOCIAL_MEDIA"],
+    "pricingModel": "PAY_PER_EVENT",
+    "pricingInfo": {
+        "events": [
+            {
+                "eventName": "profile-scraped",
+                "eventTitle": "Profile scraped",
+                "eventDescription": "One account profile with follower, following and post counts, bio and avatar.",
+                "eventPriceUsd": 0.002
+            },
+            {
+                "eventName": "post-scraped",
+                "eventTitle": "Post scraped",
+                "eventDescription": "One post or boost with text, engagement counts, media, hashtags and mentions.",
+                "eventPriceUsd": 0.001
+            }
+        ]
+    }
+}

@@ -1,0 +1,66 @@
+{
+    "actorSpecification": 1,
+    "fields": {},
+    "views": {
+        "overview": {
+            "title": "Overview",
+            "transformation": {
+                "fields": [
+                    "platform",
+                    "type",
+                    "author.handle",
+                    "text",
+                    "createdAt",
+                    "likes",
+                    "reposts",
+                    "replies",
+                    "url"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "platform": { "label": "Platform" },
+                    "type": { "label": "Type" },
+                    "author.handle": { "label": "Author" },
+                    "text": { "label": "Text" },
+                    "createdAt": { "label": "Created" },
+                    "likes": { "label": "Likes" },
+                    "reposts": { "label": "Reposts" },
+                    "replies": { "label": "Replies" },
+                    "url": { "label": "URL", "format": "link" }
+                }
+            }
+        },
+        "profiles": {
+            "title": "Profiles",
+            "transformation": {
+                "fields": [
+                    "platform",
+                    "author.handle",
+                    "author.displayName",
+                    "author.followers",
+                    "author.following",
+                    "author.postsCount",
+                    "author.createdAt",
+                    "text",
+                    "url"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "platform": { "label": "Platform" },
+                    "author.handle": { "label": "Handle" },
+                    "author.displayName": { "label": "Name" },
+                    "author.followers": { "label": "Followers" },
+                    "author.following": { "label": "Following" },
+                    "author.postsCount": { "label": "Posts" },
+                    "author.createdAt": { "label": "Joined" },
+                    "text": { "label": "Bio" },
+                    "url": { "label": "Profile", "format": "link" }
+                }
+            }
+        }
+    }
+}

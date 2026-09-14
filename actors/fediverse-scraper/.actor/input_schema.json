@@ -1,0 +1,106 @@
+{
+    "title": "Fediverse Scraper input",
+    "description": "Point it at Mastodon or Bluesky accounts, hashtags or posts. Platform is detected per target, so you can mix both networks in one run.",
+    "type": "object",
+    "schemaVersion": 1,
+    "properties": {
+        "targets": {
+            "title": "Targets",
+            "type": "array",
+            "description": "What to scrape, one entry per line. The platform is detected automatically.\n\nMastodon: `@user@instance`, `#hashtag@instance`, a profile URL (`https://mastodon.social/@Gargron`), or a post permalink. Works on any Mastodon instance, not just mastodon.social.\n\nBluesky: a handle (`bsky.app`, `alice.bsky.social`), a `did:plc:...`, a profile or post URL (`https://bsky.app/profile/bsky.app`), or an `at://` URI. People search: `bsky:actors:climate`.\n\nNot supported: Bluesky keyword/hashtag search. Bluesky refuses unauthenticated search requests from datacenter IPs and this Actor never asks for your password. Use a Mastodon hashtag target instead.",
+            "editor": "stringList",
+            "prefill": [
+                "@astraedus@mastodon.social",
+                "@Gargron@mastodon.social",
+                "#opensource@mastodon.social",
+                "bsky.app"
+            ],
+            "default": [
+                "@astraedus@mastodon.social",
+                "@Gargron@mastodon.social",
+                "#opensource@mastodon.social",
+                "bsky.app"
+            ],
+            "items": {
+                "type": "string"
+            }
+        },
+        "mode": {
+            "title": "What to collect",
+            "type": "string",
+            "description": "`both` (default) returns a profile row for every account target plus post rows for everything. `profiles` returns account rows only - for a hashtag target, that means the accounts posting under it. `posts` returns post rows only.",
+            "editor": "select",
+            "enum": ["both", "profiles", "posts"],
+            "enumTitles": [
+                "Both - profiles and their posts",
+                "Profiles only",
+                "Posts only"
+            ],
+            "default": "both",
+            "prefill": "both"
+        },
+        "maxPostsPerTarget": {
+            "title": "Max posts per target",
+            "type": "integer",
+            "description": "Upper bound on post rows collected for each target. Pagination stops as soon as this is reached, so a lower number is a cheaper, faster run. Raise it for a full backfill.",
+            "editor": "number",
+            "minimum": 1,
+            "maximum": 10000,
+            "default": 20,
+            "prefill": 20,
+            "unit": "posts"
+        },
+        "since": {
+            "title": "Only posts since",
+            "type": "string",
+            "description": "Optional ISO date (`2026-01-01`) or timestamp. Posts older than this are skipped and pagination stops early once the feed passes the cut-off. Leave empty for no date limit.",
+            "editor": "datepicker"
+        },
+        "includeReplies": {
+            "title": "Include replies",
+            "type": "boolean",
+            "description": "Include posts that are replies to someone else. Off by default, because most users want original posts.",
+            "editor": "checkbox",
+            "default": false
+        },
+        "includeReposts": {
+            "title": "Include boosts / reposts",
+            "type": "boolean",
+            "description": "Include content the account boosted (Mastodon) or reposted (Bluesky) rather than wrote. Such rows are flagged with `isRepost: true` and credited to the original author.",
+            "editor": "checkbox",
+            "default": false
+        },
+        "resolveMedia": {
+            "title": "Include media",
+            "type": "boolean",
+            "description": "Populate the `media` array with image, video and link-card URLs plus their alt text. Turn off for a smaller, text-only dataset.",
+            "editor": "checkbox",
+            "default": true
+        },
+        "includeRaw": {
+            "title": "Include raw API response",
+            "type": "boolean",
+            "description": "Attach the untouched API object to every row as `raw`. Useful when you need a field this Actor does not normalize; makes the dataset several times larger.",
+            "editor": "checkbox",
+            "default": false
+        },
+        "defaultMastodonInstance": {
+            "title": "Default Mastodon instance",
+            "type": "string",
+            "description": "Instance used for targets written without one, such as a bare `#hashtag`.",
+            "editor": "textfield",
+            "default": "mastodon.social",
+            "prefill": "mastodon.social"
+        },
+        "maxConcurrency": {
+            "title": "Max concurrent targets",
+            "type": "integer",
+            "description": "How many targets to work on at once. Requests to any single server are paced regardless, to stay well inside published rate limits.",
+            "editor": "number",
+            "minimum": 1,
+            "maximum": 10,
+            "default": 4
+        }
+    },
+    "required": []
+}
