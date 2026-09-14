@@ -1,0 +1,33 @@
+{
+    "_comment": [
+        "Single source of truth for this Actor's pay-per-event pricing.",
+        "Apify does not read this file. actor.json has no pricing field and the CLI has no pricing",
+        "command, so the prices would otherwise live only in the Console with no history or review.",
+        "HOW TO APPLY IT (measured against the live API on 2026-09-14, not read off the docs):",
+        "  PUT /v2/acts/{actorId} DOES accept a `pricingInfos` body field, even though the public",
+        "  API reference lists it as response-only. Proof: an unknown field returns",
+        "  `schema-validation`, while `pricingInfos` returns the semantic error",
+        "  `cannot-monetize-without-payout-billing-info` — it got past field validation.",
+        "  So the real prerequisite is payout billing info on the account, set once at",
+        "  https://console.apify.com/actors/{actorId}/publication (a KYC step, not an API one).",
+        "  Once that exists, apply these prices with PUT /v2/acts/{actorId}; the exact nesting under",
+        "  pricingInfos[0].pricingPerEvent.actorChargeEvents is reconstructed, not yet confirmed,",
+        "  because the billing gate rejects before shape validation. Verify against the Console",
+        "  after the first apply.",
+        "test/definition.test.ts asserts that every event charged in src/ appears here and that the",
+        "README's pricing table quotes these exact numbers, so the three can never drift apart."
+    ],
+    "pricingModel": "PAY_PER_EVENT",
+    "events": {
+        "app-checked": {
+            "eventTitle": "App checked",
+            "eventDescription": "One app in one country checked against its store for new reviews, including the app-name lookup and all review pages fetched for it.",
+            "eventPriceUsd": 0.01
+        },
+        "review-emitted": {
+            "eventTitle": "Review emitted",
+            "eventDescription": "One review row pushed to the dataset. Reviews already seen by a previous run are free — you only pay for new ones.",
+            "eventPriceUsd": 0.002
+        }
+    }
+}

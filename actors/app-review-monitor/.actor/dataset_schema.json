@@ -1,0 +1,38 @@
+{
+    "actorSpecification": 1,
+    "fields": {},
+    "views": {
+        "overview": {
+            "title": "New reviews",
+            "transformation": {
+                "fields": [
+                    "date",
+                    "store",
+                    "appName",
+                    "country",
+                    "rating",
+                    "title",
+                    "text",
+                    "author",
+                    "appVersion",
+                    "url"
+                ]
+            },
+            "display": {
+                "component": "table",
+                "properties": {
+                    "date": { "label": "Date", "format": "date" },
+                    "store": { "label": "Store" },
+                    "appName": { "label": "App" },
+                    "country": { "label": "Country" },
+                    "rating": { "label": "Rating", "format": "number" },
+                    "title": { "label": "Title" },
+                    "text": { "label": "Review" },
+                    "author": { "label": "Author" },
+                    "appVersion": { "label": "App version" },
+                    "url": { "label": "Link", "format": "link" }
+                }
+            }
+        }
+    }
+}
