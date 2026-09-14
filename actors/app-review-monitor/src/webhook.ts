@@ -6,6 +6,7 @@
  */
 
 import { log } from 'apify';
+import { assertSafeOutboundUrl, nonStandardPortAllowed, safeFetch } from './safe-url.ts';
 import type { AppCheckResult, ReviewRow } from './types.ts';
 
 const WEBHOOK_TIMEOUT_MS = 15_000;
@@ -80,22 +81,40 @@ export function buildWebhookPayload(results: readonly AppCheckResult[], runNote 
     };
 }
 
+/**
+ * Deliver the summary.
+ *
+ * The URL is re-validated here even though `parseInput` already did it: input
+ * validation and delivery are far apart in time and code, and this is the call
+ * that actually opens the socket. `safeFetch` then follows redirects by hand so
+ * a public host cannot 302 us onto loopback or the metadata endpoint.
+ *
+ * Never throws: a customer's Slack/Zapier endpoint being down (or their URL
+ * being unsafe) must not fail a scrape that already succeeded and already
+ * charged them.
+ */
 export async function postWebhook(url: string, payload: WebhookPayload): Promise<boolean> {
+    const guard = { label: 'webhookUrl', allowNonStandardPort: nonStandardPortAllowed() };
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'content-type': 'application/json',
-                'user-agent': 'apify-app-review-monitor/1.0',
+        const target = assertSafeOutboundUrl(url, guard);
+        const response = await safeFetch(
+            target,
+            {
+                method: 'POST',
+                headers: {
+                    'content-type': 'application/json',
+                    'user-agent': 'apify-app-review-monitor/1.0',
+                },
+                body: JSON.stringify(payload),
+                signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
             },
-            body: JSON.stringify(payload),
-            signal: AbortSignal.timeout(WEBHOOK_TIMEOUT_MS),
-        });
+            guard,
+        );
         if (!response.ok) {
             log.warning(`Webhook POST returned HTTP ${response.status} ${response.statusText}.`);
             return false;
         }
-        log.info(`Webhook delivered to ${new URL(url).host} (HTTP ${response.status}).`);
+        log.info(`Webhook delivered to ${target.host} (HTTP ${response.status}).`);
         return true;
     } catch (error) {
         log.warning(`Webhook POST failed: ${(error as Error).message}. The run itself is unaffected.`);

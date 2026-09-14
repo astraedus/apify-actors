@@ -47,7 +47,7 @@
         "webhookUrl": {
             "title": "Webhook URL (optional)",
             "type": "string",
-            "description": "If set, the compact run summary is POSTed here as JSON when the run finishes. Point it at Slack, Make, n8n, Zapier or your own endpoint to get growth and viral-outlier alerts. Leave empty to skip.",
+            "description": "If set, the compact run summary is POSTed here as JSON when the run finishes. Point it at Slack, Make, n8n, Zapier or your own endpoint to get growth and viral-outlier alerts. Leave empty to skip. Must be a public http(s) endpoint on the default port, with no user:password in the URL: private, loopback, link-local and internal hostnames are rejected, and redirects are followed only to addresses that pass the same check.",
             "editor": "textfield"
         },
         "baseActor": {

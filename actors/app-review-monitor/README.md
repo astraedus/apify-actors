@@ -86,6 +86,8 @@ Set `webhookUrl` and this gets POSTed once per run, after the dataset is written
 
 Works as-is with Slack workflow webhooks, Zapier catch hooks, Make, n8n, or your own endpoint. A webhook that is down or slow is logged and ignored — it never fails a run you already paid for.
 
+`webhookUrl` must be a **public** http(s) endpoint on the default port, with no `user:password@` in the URL. Loopback, private, link-local, cloud-metadata and internal hostnames (`localhost`, `*.local`, `*.internal`, bare single-label names) are rejected before the run starts, in every notation — and redirects are followed by hand, at most three hops, only to addresses that pass the same check. If you genuinely need a non-standard port, set the Actor environment variable `ALLOW_NON_STANDARD_WEBHOOK_PORT=1`.
+
 ## Scheduling
 
 The actor is built to be scheduled; running it once by hand only gives you the backlog.

@@ -17,6 +17,7 @@ import { buildReport, buildSnapshot } from './analytics.ts';
 import { baseActorInput, normalizeItems } from './normalize.ts';
 import { parseProfiles, snapshotKey } from './parse.ts';
 import { ACTOR_NAME, buildSummary } from './summary.ts';
+import { postWebhook, validateWebhookUrl } from './webhook.ts';
 import type { ProfileReport, ProfileSnapshot } from './types.ts';
 
 /** Charged once per profile we actually produce a report for. This is our margin. */
@@ -115,29 +116,6 @@ async function loadSnapshot(
     }
 }
 
-/** POST the summary to the user's webhook. Never fails the run. */
-async function postWebhook(url: string, body: unknown): Promise<void> {
-    try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'content-type': 'application/json' },
-            body: JSON.stringify(body),
-            signal: AbortSignal.timeout(15_000),
-        });
-
-        if (!response.ok) {
-            log.warning(`Webhook returned HTTP ${response.status}; the run itself succeeded.`);
-            return;
-        }
-
-        log.info('Run summary POSTed to the webhook.');
-    } catch (error) {
-        log.warning('Webhook POST failed; the run itself succeeded and the data is in the dataset.', {
-            error: (error as Error).message,
-        });
-    }
-}
-
 await Actor.init();
 
 const runStartedAt = new Date().toISOString();
@@ -163,6 +141,18 @@ if (usernames.length === 0) {
     await Actor.fail(
         'No valid TikTok profiles in the input. Provide handles (tiktok), @handles (@tiktok) or profile URLs (https://www.tiktok.com/@tiktok).',
     );
+}
+
+// `webhookUrl` is an SSRF sink: whatever goes in it is a host this Actor
+// connects to from inside Apify's network. Validate it HERE, before the base
+// scraper is called, so an unusable URL costs the user nothing — a run that
+// scraped everything and then refused to deliver would still be billed in full.
+if (webhookUrl.length > 0) {
+    try {
+        validateWebhookUrl(webhookUrl);
+    } catch (error) {
+        await Actor.fail(`${(error as Error).message} Nothing was charged.`);
+    }
 }
 
 log.info(

@@ -72,7 +72,7 @@
         "webhookUrl": {
             "title": "Webhook URL",
             "type": "string",
-            "description": "Optional. After the run, a JSON summary (per app: new review count, average rating, the worst reviews) is POSTed here. Works with Slack workflow URLs, Zapier, Make, or your own endpoint. A failing webhook never fails the run.",
+            "description": "Optional. After the run, a JSON summary (per app: new review count, average rating, the worst reviews) is POSTed here. Works with Slack workflow URLs, Zapier, Make, or your own endpoint. A failing webhook never fails the run. Must be a public http(s) endpoint on the default port, with no user:password in the URL: private, loopback, link-local and internal hostnames are rejected, and redirects are followed only to addresses that pass the same check.",
             "editor": "textfield",
             "example": "https://hooks.zapier.com/hooks/catch/123456/abcdef",
             "sectionCaption": "Alerting"

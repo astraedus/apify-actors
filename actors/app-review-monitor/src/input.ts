@@ -6,6 +6,7 @@
  * single network request or charge happens.
  */
 
+import { assertSafeOutboundUrl, nonStandardPortAllowed } from './safe-url.ts';
 import { DEFAULT_STATE_STORE_NAME } from './state.ts';
 
 /**
@@ -71,20 +72,22 @@ function asRating(value: unknown, field: string): number | null {
     return Math.round(n);
 }
 
+/**
+ * Validate the webhook URL before the run does any work.
+ *
+ * This is an SSRF sink: whatever goes in here is a host this Actor connects to
+ * from inside Apify's network, so it is checked against the same guard that
+ * runs again immediately before the POST (and on every redirect hop). Failing
+ * here rather than at delivery time means a bad URL costs the user nothing.
+ */
 function asWebhookUrl(value: unknown): string | null {
     if (value == null || value === '') return null;
     const raw = String(value).trim();
     if (!raw) return null;
-    let url: URL;
-    try {
-        url = new URL(raw);
-    } catch {
-        throw new Error(`\`webhookUrl\` is not a valid URL: ${raw}`);
-    }
-    if (url.protocol !== 'https:' && url.protocol !== 'http:') {
-        throw new Error(`\`webhookUrl\` must be an http(s) URL, got ${url.protocol}`);
-    }
-    return url.toString();
+    return assertSafeOutboundUrl(raw, {
+        label: 'webhookUrl',
+        allowNonStandardPort: nonStandardPortAllowed(),
+    }).toString();
 }
 
 export function parseInput(raw: RawInput): ParsedInput {

@@ -96,6 +96,8 @@ The whole point is history, so:
 
 Every run POSTs the summary above to that URL as JSON. Alert on whatever matters to you — `outlierCount > 0` to catch a competitor's video going viral, `followersDelta < 0` to catch a decline, `profilesMissing` being non-empty to catch a deleted or renamed account.
 
+`webhookUrl` must be a **public** http(s) endpoint on the default port, with no `user:password@` in the URL. Loopback, private, link-local, cloud-metadata and internal hostnames (`localhost`, `*.local`, `*.internal`, bare single-label names) are rejected before the run starts, in every notation — and redirects are followed by hand, at most three hops, only to addresses that pass the same check. If you genuinely need a non-standard port, set the Actor environment variable `ALLOW_NON_STANDARD_WEBHOOK_PORT=1`. A webhook that is down, slow or refused is logged and ignored — it never fails a run you already paid for.
+
 Snapshots persist in a named key-value store (`tiktok-growth-monitor-state` by default), so history survives across runs automatically. Running two independent schedules over different profile sets? Give each one its own `snapshotStoreName`.
 
 ---
@@ -108,7 +110,7 @@ Snapshots persist in a named key-value store (`tiktok-growth-monitor-state` by d
 | `videosPerProfile` | integer | `20` | Recent videos fetched per profile. This is the window the median, outliers and per-video deltas are computed over. |
 | `outlierMultiplier` | integer | `3` | Flag a video at >= this multiple of the profile's median views. Lower it to `2` for a chattier feed. |
 | `snapshotStoreName` | string | `tiktok-growth-monitor-state` | Named key-value store holding per-profile history. |
-| `webhookUrl` | string | *(none)* | POST the run summary here as JSON when the run finishes. |
+| `webhookUrl` | string | *(none)* | POST the run summary here as JSON when the run finishes. Must be a public http(s) endpoint (see below). |
 | `baseActor` | string | `clockworks/tiktok-profile-scraper` | The scraper supplying raw data. Only change this if it gets renamed. |
 
 Bigger `videosPerProfile` gives a more stable median but costs more at the base scraper (see below). 20 is a good balance; 10 is plenty if you only care about follower growth and brand-new videos.

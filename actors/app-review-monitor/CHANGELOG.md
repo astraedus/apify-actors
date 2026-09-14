@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Security: `webhookUrl` is validated against an SSRF guard at input time and again immediately before the POST. Loopback, private, link-local, cloud-metadata and internal hosts are refused in every notation (`0xa9.0xfe.0xa9.0xfe`, `0251.0376.0251.0376`, `127.1`, `0177.0.1`, `::1`, `::ffff:127.0.0.1`, `localhost`, `*.internal`), as are embedded credentials and non-standard ports. Outbound requests no longer follow redirects blindly: at most three hops, each re-checked.
+
 ## 1.0 — 2026-09-14
 
 First release.

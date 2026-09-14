@@ -10,6 +10,13 @@
  *   - `date` already arrives as an ISO-8601 string.
  *   - `title` is always null — Google Play removed review titles years ago.
  *   - `replyText` / `replyDate` carry the developer's public response.
+ *
+ * SSRF note: this source makes no `fetch()` call of our own. The package builds
+ * its own URLs against fixed `play.google.com` endpoints (via `got`, which does
+ * follow redirects) and the only user-controlled values — appId, country, lang —
+ * land in a request body and query string, never in the host. There is therefore
+ * no user-controlled destination to guard here; `src/safe-url.ts` covers the
+ * places where there is one (the webhook and the App Store feed).
  */
 
 import { log } from 'apify';
