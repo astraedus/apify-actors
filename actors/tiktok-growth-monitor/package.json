@@ -23,6 +23,7 @@
     "devDependencies": {
         "@apify/tsconfig": "^0.1.0",
         "@types/node": "^24.3.0",
+        "ajv": "^8.20.0",
         "typescript": "^5.9.2"
     }
 }

@@ -1,6 +1,141 @@
 {
     "actorSpecification": 1,
-    "fields": {},
+    "fields": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+            "store": {
+                "type": "string",
+                "title": "Store",
+                "description": "Which store the review came from: \"google-play\" or \"apple\".",
+                "example": "google-play"
+            },
+            "appId": {
+                "type": "string",
+                "title": "App ID",
+                "description": "Google Play package name or numeric Apple App Store ID.",
+                "example": "com.raeduslabs.nudge"
+            },
+            "appName": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "App name",
+                "description": "App title as the store reports it; null when the store did not expose one.",
+                "example": "Nudge"
+            },
+            "country": {
+                "type": "string",
+                "title": "Country",
+                "description": "Two-letter store country code the review was read from.",
+                "example": "us"
+            },
+            "reviewId": {
+                "type": "string",
+                "title": "Review ID",
+                "description": "Store-assigned review identifier, used to decide what counts as new.",
+                "example": "gp:AOqpTOHk"
+            },
+            "rating": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Rating",
+                "description": "Star rating from 1 to 5; null when the store omitted it.",
+                "example": 4
+            },
+            "title": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Title",
+                "description": "Review headline. Always null on Google Play, which has no review titles.",
+                "example": "Finally something that sticks"
+            },
+            "text": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Review text",
+                "description": "Body of the review as plain text.",
+                "example": "Best blocker I have tried."
+            },
+            "author": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Author",
+                "description": "Public display name of the reviewer; null when the store hid it.",
+                "example": "Sam"
+            },
+            "date": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Date",
+                "description": "ISO-8601 timestamp of the review; null when the store omitted it.",
+                "example": "2026-09-12T04:31:00.000Z"
+            },
+            "appVersion": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "App version",
+                "description": "App version the review was left on, when the store reports it.",
+                "example": "1.17.0"
+            },
+            "developerReply": {
+                "type": [
+                    "object",
+                    "null"
+                ],
+                "title": "Developer reply",
+                "description": "The developer's public reply to this review, or null when there is none.",
+                "additionalProperties": true,
+                "properties": {
+                    "text": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Reply text",
+                        "description": "Body of the developer's reply."
+                    },
+                    "date": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Reply date",
+                        "description": "ISO-8601 timestamp of the reply; null when the store did not expose one."
+                    }
+                }
+            },
+            "url": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "URL",
+                "description": "Canonical public link to the review, falling back to the app's store page.",
+                "example": "https://play.google.com/store/apps/details?id=com.raeduslabs.nudge&hl=en&gl=us"
+            },
+            "isNew": {
+                "type": "boolean",
+                "title": "Is new",
+                "description": "True when no previous run of this Actor had seen this review.",
+                "example": true
+            }
+        }
+    },
     "views": {
         "overview": {
             "title": "New reviews",
@@ -21,16 +156,39 @@
             "display": {
                 "component": "table",
                 "properties": {
-                    "date": { "label": "Date", "format": "date" },
-                    "store": { "label": "Store" },
-                    "appName": { "label": "App" },
-                    "country": { "label": "Country" },
-                    "rating": { "label": "Rating", "format": "number" },
-                    "title": { "label": "Title" },
-                    "text": { "label": "Review" },
-                    "author": { "label": "Author" },
-                    "appVersion": { "label": "App version" },
-                    "url": { "label": "Link", "format": "link" }
+                    "date": {
+                        "label": "Date",
+                        "format": "date"
+                    },
+                    "store": {
+                        "label": "Store"
+                    },
+                    "appName": {
+                        "label": "App"
+                    },
+                    "country": {
+                        "label": "Country"
+                    },
+                    "rating": {
+                        "label": "Rating",
+                        "format": "number"
+                    },
+                    "title": {
+                        "label": "Title"
+                    },
+                    "text": {
+                        "label": "Review"
+                    },
+                    "author": {
+                        "label": "Author"
+                    },
+                    "appVersion": {
+                        "label": "App version"
+                    },
+                    "url": {
+                        "label": "Link",
+                        "format": "link"
+                    }
                 }
             }
         }

@@ -1,6 +1,262 @@
 {
     "actorSpecification": 1,
-    "fields": {},
+    "fields": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+            "platform": {
+                "type": "string",
+                "title": "Platform",
+                "description": "Network the row came from: \"mastodon\" or \"bluesky\". The only column a consumer has to branch on.",
+                "example": "mastodon"
+            },
+            "type": {
+                "type": "string",
+                "title": "Row type",
+                "description": "\"post\" for a status/skeet, \"profile\" for an account record.",
+                "example": "post"
+            },
+            "id": {
+                "type": "string",
+                "title": "ID",
+                "description": "Platform-native identifier: a Mastodon status/account id, or a Bluesky AT-URI or DID.",
+                "example": "115184872661093461"
+            },
+            "url": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "URL",
+                "description": "Public web link to the post or profile; null when the platform did not expose one.",
+                "example": "https://mastodon.social/@astraedus/115184872661093461"
+            },
+            "author": {
+                "type": [
+                    "object",
+                    "null"
+                ],
+                "title": "Author",
+                "description": "The account that wrote the post, or the account itself on a profile row. Identical shape on both platforms.",
+                "additionalProperties": true,
+                "properties": {
+                    "handle": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Handle",
+                        "description": "Fully-qualified handle, e.g. \"user@mastodon.social\" or \"user.bsky.social\".",
+                        "example": "astraedus@mastodon.social"
+                    },
+                    "displayName": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Display name",
+                        "description": "Human-readable account name."
+                    },
+                    "url": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Profile URL",
+                        "description": "Public link to the account's profile page."
+                    },
+                    "followers": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "title": "Followers",
+                        "description": "Follower count; null when the server does not publish it."
+                    },
+                    "following": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "title": "Following",
+                        "description": "Following count; null when the server does not publish it."
+                    },
+                    "postsCount": {
+                        "type": [
+                            "number",
+                            "null"
+                        ],
+                        "title": "Posts",
+                        "description": "Lifetime post count; null when the server does not publish it."
+                    },
+                    "createdAt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Joined",
+                        "description": "ISO-8601 account creation time, when the platform exposes it."
+                    },
+                    "bio": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Bio",
+                        "description": "Account description, converted to plain text."
+                    },
+                    "avatar": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Avatar",
+                        "description": "URL of the account's avatar image."
+                    }
+                }
+            },
+            "text": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Text",
+                "description": "Post body as plain text (HTML converted), or the account bio on a profile row.",
+                "example": "Shipped the thing."
+            },
+            "createdAt": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Created at",
+                "description": "ISO-8601 time the post was published, or the account was created.",
+                "example": "2026-09-12T04:31:00.000Z"
+            },
+            "language": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Language",
+                "description": "Language code the author tagged the post with; null when untagged.",
+                "example": "en"
+            },
+            "replies": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Replies",
+                "description": "Reply count at scrape time; null when the server does not publish it.",
+                "example": 3
+            },
+            "reposts": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Reposts",
+                "description": "Boost/repost count at scrape time; null when the server does not publish it.",
+                "example": 12
+            },
+            "likes": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Likes",
+                "description": "Favourite/like count at scrape time; null when the server does not publish it.",
+                "example": 40
+            },
+            "media": {
+                "type": "array",
+                "title": "Media",
+                "description": "Attachments on the post, or the avatar on a profile row. Empty when resolveMedia is off.",
+                "items": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "properties": {
+                        "url": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Media URL",
+                            "description": "Direct link to the attachment."
+                        },
+                        "type": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Media type",
+                            "description": "\"image\", \"video\", \"external\" for a link card, or the platform's own label."
+                        },
+                        "alt": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Alt text",
+                            "description": "Author-supplied description of the attachment."
+                        }
+                    }
+                }
+            },
+            "hashtags": {
+                "type": "array",
+                "title": "Hashtags",
+                "description": "Hashtags used in the post, de-duplicated, without the leading #.",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "mentions": {
+                "type": "array",
+                "title": "Mentions",
+                "description": "Handles mentioned in the post, de-duplicated and fully qualified.",
+                "items": {
+                    "type": "string"
+                }
+            },
+            "inReplyTo": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "In reply to",
+                "description": "Identifier of the post being replied to; null for a top-level post.",
+                "example": null
+            },
+            "isRepost": {
+                "type": "boolean",
+                "title": "Is repost",
+                "description": "True when the row is a boost/repost. The content is credited to its original author.",
+                "example": false
+            },
+            "target": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Target",
+                "description": "The input target this row was collected for, exactly as it was supplied.",
+                "example": "@astraedus@mastodon.social"
+            },
+            "scrapedAt": {
+                "type": "string",
+                "title": "Scraped at",
+                "description": "ISO-8601 time this row was collected, so counters can be compared across runs.",
+                "example": "2026-09-14T02:00:00.000Z"
+            },
+            "raw": {
+                "title": "Raw payload",
+                "description": "The untouched API object this row was built from. Present only when the includeRaw input is enabled."
+            }
+        }
+    },
     "views": {
         "overview": {
             "title": "Overview",
@@ -20,15 +276,34 @@
             "display": {
                 "component": "table",
                 "properties": {
-                    "platform": { "label": "Platform" },
-                    "type": { "label": "Type" },
-                    "author.handle": { "label": "Author" },
-                    "text": { "label": "Text" },
-                    "createdAt": { "label": "Created" },
-                    "likes": { "label": "Likes" },
-                    "reposts": { "label": "Reposts" },
-                    "replies": { "label": "Replies" },
-                    "url": { "label": "URL", "format": "link" }
+                    "platform": {
+                        "label": "Platform"
+                    },
+                    "type": {
+                        "label": "Type"
+                    },
+                    "author.handle": {
+                        "label": "Author"
+                    },
+                    "text": {
+                        "label": "Text"
+                    },
+                    "createdAt": {
+                        "label": "Created"
+                    },
+                    "likes": {
+                        "label": "Likes"
+                    },
+                    "reposts": {
+                        "label": "Reposts"
+                    },
+                    "replies": {
+                        "label": "Replies"
+                    },
+                    "url": {
+                        "label": "URL",
+                        "format": "link"
+                    }
                 }
             }
         },
@@ -50,15 +325,34 @@
             "display": {
                 "component": "table",
                 "properties": {
-                    "platform": { "label": "Platform" },
-                    "author.handle": { "label": "Handle" },
-                    "author.displayName": { "label": "Name" },
-                    "author.followers": { "label": "Followers" },
-                    "author.following": { "label": "Following" },
-                    "author.postsCount": { "label": "Posts" },
-                    "author.createdAt": { "label": "Joined" },
-                    "text": { "label": "Bio" },
-                    "url": { "label": "Profile", "format": "link" }
+                    "platform": {
+                        "label": "Platform"
+                    },
+                    "author.handle": {
+                        "label": "Handle"
+                    },
+                    "author.displayName": {
+                        "label": "Name"
+                    },
+                    "author.followers": {
+                        "label": "Followers"
+                    },
+                    "author.following": {
+                        "label": "Following"
+                    },
+                    "author.postsCount": {
+                        "label": "Posts"
+                    },
+                    "author.createdAt": {
+                        "label": "Joined"
+                    },
+                    "text": {
+                        "label": "Bio"
+                    },
+                    "url": {
+                        "label": "Profile",
+                        "format": "link"
+                    }
                 }
             }
         }

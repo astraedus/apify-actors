@@ -14,5 +14,8 @@
         "test": "node --test \"test/*.test.js\"",
         "smoke": "node test/smoke.js"
     },
-    "license": "MIT"
+    "license": "MIT",
+    "devDependencies": {
+        "ajv": "^8.20.0"
+    }
 }

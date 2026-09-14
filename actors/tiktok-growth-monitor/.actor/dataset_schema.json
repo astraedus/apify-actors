@@ -1,6 +1,434 @@
 {
     "actorSpecification": 1,
-    "fields": {},
+    "fields": {
+        "$schema": "http://json-schema.org/draft-07/schema#",
+        "type": "object",
+        "additionalProperties": true,
+        "properties": {
+            "username": {
+                "type": "string",
+                "title": "Profile",
+                "description": "TikTok handle, without the @.",
+                "example": "laurygoth"
+            },
+            "nickname": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Display name",
+                "description": "Profile display name; null when the source did not supply one.",
+                "example": "laury"
+            },
+            "verified": {
+                "type": "boolean",
+                "title": "Verified",
+                "description": "True when TikTok shows a verified badge on the profile.",
+                "example": false
+            },
+            "snapshotAt": {
+                "type": "string",
+                "title": "Snapshot",
+                "description": "ISO-8601 time this run read the profile.",
+                "example": "2026-09-14T02:00:00.000Z"
+            },
+            "previousSnapshotAt": {
+                "type": [
+                    "string",
+                    "null"
+                ],
+                "title": "Compared to",
+                "description": "ISO-8601 time of the snapshot the deltas are measured against; null on the first run.",
+                "example": "2026-09-13T02:00:00.000Z"
+            },
+            "followers": {
+                "type": "number",
+                "title": "Followers",
+                "description": "Follower count at snapshot time.",
+                "example": 35
+            },
+            "followersDelta": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Followers +/-",
+                "description": "Change in followers since the previous snapshot; null on the first run.",
+                "example": 4
+            },
+            "following": {
+                "type": "number",
+                "title": "Following",
+                "description": "Following count at snapshot time.",
+                "example": 112
+            },
+            "followingDelta": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Following +/-",
+                "description": "Change in following count since the previous snapshot; null on the first run.",
+                "example": 0
+            },
+            "likes": {
+                "type": "number",
+                "title": "Total likes",
+                "description": "Lifetime hearts across the whole profile.",
+                "example": 5120
+            },
+            "likesDelta": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Likes +/-",
+                "description": "Change in lifetime likes since the previous snapshot; null on the first run.",
+                "example": 210
+            },
+            "videoCount": {
+                "type": "number",
+                "title": "Videos",
+                "description": "Lifetime video count the profile reports, not the size of the fetched window.",
+                "example": 48
+            },
+            "videoCountDelta": {
+                "type": [
+                    "number",
+                    "null"
+                ],
+                "title": "Videos +/-",
+                "description": "Change in the lifetime video count since the previous snapshot; null on the first run.",
+                "example": 2
+            },
+            "newVideos": {
+                "type": "array",
+                "title": "New videos",
+                "description": "Videos present now that were absent from the previous snapshot.",
+                "items": {
+                    "type": "object",
+                    "title": "New video",
+                    "description": "A video first seen in this run.",
+                    "additionalProperties": true,
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "title": "Video ID",
+                            "description": "TikTok video identifier.",
+                            "example": "7412345678901234567"
+                        },
+                        "url": {
+                            "type": "string",
+                            "title": "URL",
+                            "description": "Public link to the video.",
+                            "example": "https://www.tiktok.com/@laurygoth/video/7412345678901234567"
+                        },
+                        "createdAt": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Posted at",
+                            "description": "ISO-8601 publish time; null when the source did not supply one.",
+                            "example": "2026-09-12T04:31:00.000Z"
+                        },
+                        "views": {
+                            "type": "number",
+                            "title": "Views",
+                            "description": "Play count at snapshot time.",
+                            "example": 12400
+                        },
+                        "likes": {
+                            "type": "number",
+                            "title": "Likes",
+                            "description": "Like count at snapshot time.",
+                            "example": 830
+                        },
+                        "comments": {
+                            "type": "number",
+                            "title": "Comments",
+                            "description": "Comment count at snapshot time.",
+                            "example": 21
+                        },
+                        "shares": {
+                            "type": "number",
+                            "title": "Shares",
+                            "description": "Share count at snapshot time.",
+                            "example": 9
+                        },
+                        "description": {
+                            "type": "string",
+                            "title": "Caption",
+                            "description": "Video caption text.",
+                            "example": "three signs that never text back"
+                        },
+                        "sound": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Sound",
+                            "description": "Name of the sound used; null when unavailable.",
+                            "example": "original sound"
+                        }
+                    }
+                }
+            },
+            "medianViews": {
+                "type": "number",
+                "title": "Median views",
+                "description": "Median view count across the videos fetched this run; the baseline outliers are measured against.",
+                "example": 1930
+            },
+            "outliers": {
+                "type": "array",
+                "title": "Outliers",
+                "description": "Videos whose views crossed the outlier threshold relative to the profile's median.",
+                "items": {
+                    "type": "object",
+                    "title": "Outlier video",
+                    "description": "A video far above the profile's median view count.",
+                    "additionalProperties": true,
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "title": "Video ID",
+                            "description": "TikTok video identifier.",
+                            "example": "7412345678901234567"
+                        },
+                        "url": {
+                            "type": "string",
+                            "title": "URL",
+                            "description": "Public link to the video.",
+                            "example": "https://www.tiktok.com/@laurygoth/video/7412345678901234567"
+                        },
+                        "createdAt": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Posted at",
+                            "description": "ISO-8601 publish time; null when the source did not supply one.",
+                            "example": "2026-09-12T04:31:00.000Z"
+                        },
+                        "views": {
+                            "type": "number",
+                            "title": "Views",
+                            "description": "Play count at snapshot time.",
+                            "example": 12400
+                        },
+                        "likes": {
+                            "type": "number",
+                            "title": "Likes",
+                            "description": "Like count at snapshot time.",
+                            "example": 830
+                        },
+                        "comments": {
+                            "type": "number",
+                            "title": "Comments",
+                            "description": "Comment count at snapshot time.",
+                            "example": 21
+                        },
+                        "shares": {
+                            "type": "number",
+                            "title": "Shares",
+                            "description": "Share count at snapshot time.",
+                            "example": 9
+                        },
+                        "description": {
+                            "type": "string",
+                            "title": "Caption",
+                            "description": "Video caption text.",
+                            "example": "three signs that never text back"
+                        },
+                        "sound": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Sound",
+                            "description": "Name of the sound used; null when unavailable.",
+                            "example": "original sound"
+                        },
+                        "viewsMultipleOfMedian": {
+                            "type": "number",
+                            "title": "x median views",
+                            "description": "How many times the profile's median view count this video reached, to 2dp.",
+                            "example": 6.42
+                        }
+                    }
+                }
+            },
+            "topVideo": {
+                "type": [
+                    "object",
+                    "null"
+                ],
+                "title": "Top video",
+                "description": "Most-viewed video in the fetched window; null when no videos were fetched.",
+                "additionalProperties": true,
+                "properties": {
+                    "id": {
+                        "type": "string",
+                        "title": "Video ID",
+                        "description": "TikTok video identifier.",
+                        "example": "7412345678901234567"
+                    },
+                    "url": {
+                        "type": "string",
+                        "title": "URL",
+                        "description": "Public link to the video.",
+                        "example": "https://www.tiktok.com/@laurygoth/video/7412345678901234567"
+                    },
+                    "createdAt": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Posted at",
+                        "description": "ISO-8601 publish time; null when the source did not supply one.",
+                        "example": "2026-09-12T04:31:00.000Z"
+                    },
+                    "views": {
+                        "type": "number",
+                        "title": "Views",
+                        "description": "Play count at snapshot time.",
+                        "example": 12400
+                    },
+                    "likes": {
+                        "type": "number",
+                        "title": "Likes",
+                        "description": "Like count at snapshot time.",
+                        "example": 830
+                    },
+                    "comments": {
+                        "type": "number",
+                        "title": "Comments",
+                        "description": "Comment count at snapshot time.",
+                        "example": 21
+                    },
+                    "shares": {
+                        "type": "number",
+                        "title": "Shares",
+                        "description": "Share count at snapshot time.",
+                        "example": 9
+                    },
+                    "description": {
+                        "type": "string",
+                        "title": "Caption",
+                        "description": "Video caption text.",
+                        "example": "three signs that never text back"
+                    },
+                    "sound": {
+                        "type": [
+                            "string",
+                            "null"
+                        ],
+                        "title": "Sound",
+                        "description": "Name of the sound used; null when unavailable.",
+                        "example": "original sound"
+                    }
+                }
+            },
+            "videos": {
+                "type": "array",
+                "title": "Videos",
+                "description": "Every video fetched for this profile this run, each with its change since the previous snapshot.",
+                "items": {
+                    "type": "object",
+                    "title": "Video",
+                    "description": "One fetched video with its deltas.",
+                    "additionalProperties": true,
+                    "properties": {
+                        "id": {
+                            "type": "string",
+                            "title": "Video ID",
+                            "description": "TikTok video identifier.",
+                            "example": "7412345678901234567"
+                        },
+                        "url": {
+                            "type": "string",
+                            "title": "URL",
+                            "description": "Public link to the video.",
+                            "example": "https://www.tiktok.com/@laurygoth/video/7412345678901234567"
+                        },
+                        "createdAt": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Posted at",
+                            "description": "ISO-8601 publish time; null when the source did not supply one.",
+                            "example": "2026-09-12T04:31:00.000Z"
+                        },
+                        "views": {
+                            "type": "number",
+                            "title": "Views",
+                            "description": "Play count at snapshot time.",
+                            "example": 12400
+                        },
+                        "likes": {
+                            "type": "number",
+                            "title": "Likes",
+                            "description": "Like count at snapshot time.",
+                            "example": 830
+                        },
+                        "comments": {
+                            "type": "number",
+                            "title": "Comments",
+                            "description": "Comment count at snapshot time.",
+                            "example": 21
+                        },
+                        "shares": {
+                            "type": "number",
+                            "title": "Shares",
+                            "description": "Share count at snapshot time.",
+                            "example": 9
+                        },
+                        "description": {
+                            "type": "string",
+                            "title": "Caption",
+                            "description": "Video caption text.",
+                            "example": "three signs that never text back"
+                        },
+                        "sound": {
+                            "type": [
+                                "string",
+                                "null"
+                            ],
+                            "title": "Sound",
+                            "description": "Name of the sound used; null when unavailable.",
+                            "example": "original sound"
+                        },
+                        "viewsDelta": {
+                            "type": [
+                                "number",
+                                "null"
+                            ],
+                            "title": "Views +/-",
+                            "description": "Change in views since the previous snapshot; null on the first run or for a video not seen before.",
+                            "example": 1800
+                        },
+                        "likesDelta": {
+                            "type": [
+                                "number",
+                                "null"
+                            ],
+                            "title": "Likes +/-",
+                            "description": "Change in likes since the previous snapshot; null on the first run or for a video not seen before.",
+                            "example": 120
+                        }
+                    }
+                }
+            },
+            "runNote": {
+                "type": "string",
+                "title": "Run note",
+                "description": "One plain-English line about what this run could and could not compute.",
+                "example": "First run for @laurygoth: baseline snapshot saved, deltas appear from the next run onwards."
+            }
+        }
+    },
     "views": {
         "growth": {
             "title": "Growth overview",
@@ -21,15 +449,33 @@
             "display": {
                 "component": "table",
                 "properties": {
-                    "username": { "label": "Profile" },
-                    "followers": { "label": "Followers" },
-                    "followersDelta": { "label": "Followers +/-" },
-                    "likes": { "label": "Total likes" },
-                    "likesDelta": { "label": "Likes +/-" },
-                    "videoCount": { "label": "Videos" },
-                    "medianViews": { "label": "Median views" },
-                    "snapshotAt": { "label": "Snapshot" },
-                    "previousSnapshotAt": { "label": "Compared to" }
+                    "username": {
+                        "label": "Profile"
+                    },
+                    "followers": {
+                        "label": "Followers"
+                    },
+                    "followersDelta": {
+                        "label": "Followers +/-"
+                    },
+                    "likes": {
+                        "label": "Total likes"
+                    },
+                    "likesDelta": {
+                        "label": "Likes +/-"
+                    },
+                    "videoCount": {
+                        "label": "Videos"
+                    },
+                    "medianViews": {
+                        "label": "Median views"
+                    },
+                    "snapshotAt": {
+                        "label": "Snapshot"
+                    },
+                    "previousSnapshotAt": {
+                        "label": "Compared to"
+                    }
                 }
             }
         },
@@ -37,7 +483,9 @@
             "title": "Full output",
             "description": "Every field, including per-video stats, new videos and outliers.",
             "transformation": {},
-            "display": { "component": "table" }
+            "display": {
+                "component": "table"
+            }
         }
     }
 }
