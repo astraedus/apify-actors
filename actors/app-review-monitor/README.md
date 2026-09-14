@@ -126,7 +126,9 @@ Your Apify spending limit is respected inside the run: when the limit is reached
 
 ## Limits
 
-- **Apple:** the public review feed serves at most 10 pages × 50 reviews = **500 reviews per app per country**, newest first, and carries no developer replies. Apps with no reviews in a storefront return nothing — that is Apple's answer, not an error.
+- **Apple:** the public review feed serves at most 10 pages × 50 reviews = **500 reviews per app per country**, newest first, and carries no developer replies.
+- **An empty result always says which kind of empty it is.** Both stores can answer "no reviews" when what they mean is "not right now" — Apple in particular returns a valid but empty feed when it rate-limits. The actor cross-checks the app's public rating count before believing an empty answer, so the run log distinguishes *this app has no reviews yet*, *that app ID does not exist in this storefront*, and *the store declined to serve the feed, retry later*. You are never told "no new reviews" when the truth is "we could not look".
+- **One failing app never fails the run.** The other apps are still checked, emitted and reported; the failure is recorded in the run log and in the webhook payload's `error` field. A check that failed is not billed.
 - **Google Play:** the actor asks for up to `maxReviewsPerApp` (ceiling 1,000) newest-first reviews per app per country.
 - **Countries:** each app is checked once per country in `countries`, and each pair is a separate `app-checked` event. Two apps × three countries = six events per run.
 - **Public data only.** No login, no cookies, no personal-data enrichment — the actor reads the same public store pages and feeds a browser would.
@@ -150,7 +152,10 @@ Yes. Everything it reads is public store data.
 Google Play removed review titles from its public store pages. Apple still has them.
 
 **An app returned zero reviews — is it broken?**
-Check the package name or numeric ID against the live store page, and check the country. `dev.astraedus.nudge` in `us` is a valid pair; `dev.astraedus.nudge` in `xx` is not.
+Read the run log; it tells you which of three things happened. *"has no reviews in the … store yet"* means the app is genuinely unrated there. *"No app with ID … exists"* means the ID or country is wrong — check them against the live store page. *"rate-limiting or temporarily unavailable"* means the store would not serve the feed on this run; the next scheduled run picks the reviews up, and you were not charged for the failed check.
+
+**Does a rate-limited store lose reviews permanently?**
+No. Nothing is marked as seen for a check that failed, so the next run re-fetches that app's feed from scratch and emits everything it missed.
 
 ---
 
