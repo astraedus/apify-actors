@@ -17,8 +17,39 @@ export const EVENT_PROFILE = 'profile-scraped';
 export const EVENT_POST = 'post-scraped';
 
 const DEFAULT_BATCH_SIZE = 50;
+const PUSH_ATTEMPTS = 3;
+const PUSH_RETRY_BASE_MS = 1_000;
+
+const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 export const eventNameForRow = (row) => (row.type === 'profile' ? EVENT_PROFILE : EVENT_POST);
+
+/**
+ * Decide up front whether this run should charge, from the Actor's own pricing info.
+ *
+ * Answering this before the first push is what lets #flush treat every push error as a
+ * real error. Charging is enabled only when the Actor is actually configured pay-per-event
+ * AND both event names exist in its pricing -- charging an unconfigured event is an error,
+ * and silently mis-billing is worse than not billing.
+ *
+ * @param {{isPayPerEvent?: boolean, perEventPrices?: Record<string, number>}|null} pricingInfo
+ * @returns {{charge: boolean, reason: string}}
+ */
+export function decideCharging(pricingInfo, { isAtHome }) {
+    if (!isAtHome) return { charge: false, reason: 'running locally; rows are stored but not billed' };
+    if (!pricingInfo?.isPayPerEvent) {
+        return { charge: false, reason: 'Actor is not configured pay-per-event; rows are stored but not billed' };
+    }
+    const prices = pricingInfo.perEventPrices ?? {};
+    const missing = [EVENT_PROFILE, EVENT_POST].filter((name) => !(name in prices));
+    if (missing.length > 0) {
+        return {
+            charge: false,
+            reason: `pricing is missing event(s) ${missing.join(', ')}; rows are stored but not billed`,
+        };
+    }
+    return { charge: true, reason: 'pay-per-event pricing is configured' };
+}
 
 /** Stable identity for a row, so the same post reached via two targets bills once. */
 export const rowKey = (row) => `${row.platform}:${row.type}:${row.id}`;
@@ -31,11 +62,12 @@ export class RowSink {
      * @param {boolean} [options.charge] False for local runs and for a build that is not
      *   monetized yet; rows are still stored, just not billed.
      */
-    constructor({ pushData, log, charge = true, batchSize = DEFAULT_BATCH_SIZE }) {
+    constructor({ pushData, log, charge = true, batchSize = DEFAULT_BATCH_SIZE, retryBaseMs = PUSH_RETRY_BASE_MS }) {
         this.pushData = pushData;
         this.log = log;
         this.charge = charge;
         this.batchSize = batchSize;
+        this.retryBaseMs = retryBaseMs;
         this.seen = new Set();
         /** Buffered per event name -- one push per name so the charge count is right. */
         this.buffers = new Map();
@@ -72,38 +104,50 @@ export class RowSink {
         return true;
     }
 
+    /**
+     * Push one buffered batch, retrying transient failures.
+     *
+     * Whether to charge is decided ONCE before the run starts, from the Actor's pricing
+     * info -- never inferred from a failed push. Treating any error as "not monetized"
+     * would let a single transient 5xx silently downgrade the rest of the run to free
+     * delivery, and re-pushing rows that may already have been stored would duplicate
+     * them. So a push that keeps failing fails the run instead of quietly giving data away.
+     */
     async #flush(eventName) {
         const rows = this.buffers.get(eventName);
         if (!rows?.length) return;
         this.buffers.set(eventName, []);
 
-        try {
-            const result = this.charge
-                ? await this.pushData(rows, eventName)
-                : await this.pushData(rows);
-            this.counts[eventName] += rows.length;
-            if (result?.eventChargeLimitReached) {
-                this.limitReached = true;
-                this.log.warning(
-                    `Reached the run's maximum total charge after ${this.total} items. `
-                    + 'Stopping early; raise the limit on the run to collect more.',
-                );
-            }
-        } catch (error) {
-            // A build that has not been monetized yet rejects the event name. Storing the
-            // data still succeeded or must still be attempted -- never lose rows over billing.
-            if (this.charge) {
-                this.charge = false;
-                this.log.warning(
-                    `Charging "${eventName}" failed (${error.message}). `
-                    + 'Continuing without charging -- this is expected for a build that is not monetized yet.',
-                );
-                await this.pushData(rows);
+        let lastError;
+        for (let attempt = 1; attempt <= PUSH_ATTEMPTS; attempt += 1) {
+            try {
+                const result = this.charge
+                    ? await this.pushData(rows, eventName)
+                    : await this.pushData(rows);
                 this.counts[eventName] += rows.length;
+                if (result?.eventChargeLimitReached) {
+                    this.limitReached = true;
+                    this.log.warning(
+                        `Reached the run's maximum total charge after ${this.total} items. `
+                        + 'Stopping early; raise the limit on the run to collect more.',
+                    );
+                }
                 return;
+            } catch (error) {
+                lastError = error;
+                if (attempt === PUSH_ATTEMPTS) break;
+                const delay = this.retryBaseMs * 2 ** (attempt - 1);
+                this.log.warning(
+                    `Storing ${rows.length} "${eventName}" row(s) failed (${error.message}); `
+                    + `retrying in ${delay}ms (attempt ${attempt}/${PUSH_ATTEMPTS}).`,
+                );
+                await sleep(delay);
             }
-            throw error;
         }
+        // Deliberately fatal: continuing would either lose the rows or hand them over unbilled.
+        throw new Error(
+            `Failed to store ${rows.length} "${eventName}" row(s) after ${PUSH_ATTEMPTS} attempts: ${lastError?.message}`,
+        );
     }
 
     /** Push whatever is still buffered. Always call before the run exits. */

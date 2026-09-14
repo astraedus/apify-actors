@@ -7,6 +7,7 @@
  */
 
 import { DEFAULT_MASTODON_INSTANCE } from './targets.js';
+import { assertPublicHost, UnsafeHostError } from './hosts.js';
 
 export const MODES = ['profiles', 'posts', 'both'];
 
@@ -69,6 +70,24 @@ export function parseSince(value) {
     return parsed;
 }
 
+/**
+ * Normalise and validate the fallback instance.
+ *
+ * This value becomes the host of a real request for any target written without one, so
+ * it gets the same canonical-hostname check as a target does -- otherwise it is simply
+ * a second door to the same SSRF.
+ */
+export function parseInstance(value) {
+    const raw = String(value ?? '').trim() || DEFAULTS.defaultMastodonInstance;
+    const stripped = raw.toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, '');
+    try {
+        return assertPublicHost(stripped, '"defaultMastodonInstance"');
+    } catch (error) {
+        if (error instanceof UnsafeHostError) throw new InputError(error.message);
+        throw error;
+    }
+}
+
 /** Apply defaults and validate. Throws InputError on anything unusable. */
 export function normaliseInput(raw = {}) {
     const input = raw ?? {};
@@ -104,8 +123,7 @@ export function normaliseInput(raw = {}) {
         includeReposts: bool(input.includeReposts, DEFAULTS.includeReposts),
         resolveMedia: bool(input.resolveMedia, DEFAULTS.resolveMedia),
         includeRaw: bool(input.includeRaw, DEFAULTS.includeRaw),
-        defaultMastodonInstance: (input.defaultMastodonInstance || DEFAULTS.defaultMastodonInstance)
-            .trim().toLowerCase().replace(/^https?:\/\//, '').replace(/\/.*$/, ''),
+        defaultMastodonInstance: parseInstance(input.defaultMastodonInstance),
         maxConcurrency: positiveInt(input.maxConcurrency, DEFAULTS.maxConcurrency, {
             field: 'maxConcurrency', min: 1, max: 10,
         }),

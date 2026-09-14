@@ -11,6 +11,8 @@
  */
 
 /** Mastodon documents 300 requests / 5 minutes / IP. 350ms keeps us under half of that. */
+import { assertPublicHttpUrl, UnsafeHostError } from './hosts.js';
+
 export const MASTODON_MIN_INTERVAL_MS = 350;
 /** Bluesky's public AppView is far more generous; 130ms is ~7.5 req/s. */
 export const BLUESKY_MIN_INTERVAL_MS = 130;
@@ -135,30 +137,74 @@ export function isRetryableStatus(status) {
     return status === 429 || status === 408 || status >= 500;
 }
 
+/** How many redirects to follow before giving up. */
+const MAX_REDIRECTS = 5;
+
+const isRedirect = (status) => status === 301 || status === 302 || status === 303
+    || status === 307 || status === 308;
+
 /**
- * GET a JSON document with pacing, retries and rate-limit feedback.
+ * Perform one GET, following redirects MANUALLY.
+ *
+ * `fetch` follows 3xx transparently, which would let a host that passed validation
+ * bounce us to 169.254.169.254 or 127.0.0.1 with nothing re-checking the final target.
+ * Following by hand means every hop goes back through the same host guard.
+ */
+async function getFollowingRedirects(startUrl, { limiter, userAgent, timeoutMs, log }) {
+    let current = assertPublicHttpUrl(startUrl).toString();
+
+    for (let hop = 0; hop <= MAX_REDIRECTS; hop += 1) {
+        const host = new URL(current).host;
+        const response = await limiter.schedule(host, () => {
+            const controller = new AbortController();
+            const timer = setTimeout(() => controller.abort(), timeoutMs);
+            return fetch(current, {
+                headers: { accept: 'application/json', 'user-agent': userAgent },
+                signal: controller.signal,
+                redirect: 'manual',
+            }).finally(() => clearTimeout(timer));
+        });
+
+        limiter.observeBudget(host, parseRateLimitHeaders(response.headers));
+        if (!isRedirect(response.status)) return { response, url: current };
+
+        const location = response.headers.get('location');
+        if (!location) {
+            throw new HttpError(`GET ${current} returned HTTP ${response.status} with no Location header`, {
+                status: response.status, url: current, body: '',
+            });
+        }
+        // Relative redirects are legitimate and common, so resolve before validating.
+        const next = new URL(location, current).toString();
+        // Throws for a metadata address, a loopback, or any non-public host.
+        assertPublicHttpUrl(next);
+        log?.info(`Following redirect ${response.status}: ${host} -> ${new URL(next).host}`);
+        current = next;
+    }
+    throw new HttpError(`GET ${startUrl} exceeded ${MAX_REDIRECTS} redirects`, {
+        status: 310, url: startUrl, body: '',
+    });
+}
+
+/**
+ * GET a JSON document with pacing, retries, redirect safety and rate-limit feedback.
  *
  * @returns {Promise<{ body: any, headers: Headers, url: string }>}
  */
 export async function fetchJson(url, { limiter, userAgent, log, timeoutMs = 30_000 } = {}) {
-    const host = new URL(url).host;
+    // Validate before anything else so a bad host fails immediately rather than after
+    // four retries, and so `new URL` below can never throw on a malformed input.
+    const host = assertPublicHttpUrl(url).host;
     let lastError;
 
     for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt += 1) {
         try {
-            const response = await limiter.schedule(host, () => {
-                const controller = new AbortController();
-                const timer = setTimeout(() => controller.abort(), timeoutMs);
-                return fetch(url, {
-                    headers: { accept: 'application/json', 'user-agent': userAgent },
-                    signal: controller.signal,
-                }).finally(() => clearTimeout(timer));
+            const { response, url: finalUrl } = await getFollowingRedirects(url, {
+                limiter, userAgent, timeoutMs, log,
             });
 
-            limiter.observeBudget(host, parseRateLimitHeaders(response.headers));
-
             if (response.ok) {
-                return { body: await response.json(), headers: response.headers, url };
+                return { body: await response.json(), headers: response.headers, url: finalUrl };
             }
 
             const body = await response.text().catch(() => '');
@@ -175,6 +221,8 @@ export async function fetchJson(url, { limiter, userAgent, log, timeoutMs = 30_0
                 status: response.status, url, body: body.slice(0, 500),
             });
         } catch (error) {
+            // An unsafe host is a permanent refusal, never something to retry into.
+            if (error instanceof UnsafeHostError) throw error;
             if (error instanceof HttpError && !isRetryableStatus(error.status)) throw error;
             lastError = error;
             if (attempt === MAX_ATTEMPTS) break;

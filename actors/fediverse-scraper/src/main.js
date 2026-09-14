@@ -13,7 +13,7 @@ import { parseTarget, describeTarget, TargetError } from './targets.js';
 import { RateLimiter } from './http.js';
 import { MastodonClient } from './mastodon.js';
 import { BlueskyClient } from './bluesky.js';
-import { RowSink, EVENT_PROFILE, EVENT_POST } from './sink.js';
+import { RowSink, EVENT_PROFILE, EVENT_POST, decideCharging } from './sink.js';
 import { scrapeTarget, pool } from './scrape.js';
 
 /** Identifies us to every server we call, with somewhere to complain to. */
@@ -49,13 +49,24 @@ try {
         bluesky: new BlueskyClient({ limiter, userAgent: USER_AGENT, log }),
     };
 
+    // Ask the platform once whether this run should bill, rather than inferring it from a
+    // failed push later. That keeps every push error a real error instead of something
+    // that could quietly turn the rest of the run into free delivery.
+    let pricingInfo = null;
+    try {
+        pricingInfo = Actor.getChargingManager().getPricingInfo();
+    } catch (error) {
+        log.warning(`Could not read pricing info (${error.message}); this run will not charge.`);
+    }
+    const { charge, reason } = decideCharging(pricingInfo, { isAtHome: Actor.isAtHome() });
+    log.info(`Charging ${charge ? 'enabled' : 'disabled'}: ${reason}.`);
+
     const sink = new RowSink({
         pushData: (rows, eventName) => (eventName
             ? Actor.pushData(rows, eventName)
             : Actor.pushData(rows)),
         log,
-        // Charging only makes sense on the platform; a local run stores rows unbilled.
-        charge: Actor.isAtHome(),
+        charge,
     });
 
     // Counted as they happen rather than derived: a subtraction over mixed categories

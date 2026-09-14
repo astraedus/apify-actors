@@ -6,6 +6,8 @@
  * and unambiguous. Every rule below is pinned by a test in test/targets.test.js.
  */
 
+import { assertPublicHost, isPublicHostname, UnsafeHostError } from './hosts.js';
+
 export const DEFAULT_MASTODON_INSTANCE = 'mastodon.social';
 
 /** Bad input from the user, not a bug and not a transient failure. */
@@ -37,22 +39,27 @@ const AT_POST_COLLECTION = 'app.bsky.feed.post';
 const isDid = (value) => /^did:(plc|web):[A-Za-z0-9._:%-]+$/.test(value);
 const isDigits = (value) => /^\d+$/.test(value);
 
-/** Every label is numeric -- i.e. the "host" is really an IPv4 literal. */
-const isIpLiteral = (value) => /^\d{1,3}(\.\d{1,3}){3}$/.test(value);
-/** Hostnames that resolve inside our own infrastructure rather than to a fediverse server. */
-const isInternalHost = (value) =>
-    isIpLiteral(value) || /(^|\.)(localhost|local|internal|localdomain)$/i.test(value);
-
 /**
- * A hostname: dot-separated labels, nothing else. Rejects schemes, paths, ports and
- * embedded credentials -- and rejects IP literals and internal names, so a crafted
- * target cannot point the scraper at a cloud metadata endpoint or an internal service.
+ * Canonicalise and validate a Mastodon instance host.
+ *
+ * Validation must happen on the CANONICAL hostname, because `new URL()` rewrites
+ * alternate IPv4 notations -- `0xa9.0xfe.0xa9.0xfe` and `127.1` both become real
+ * addresses -- and any check applied to the raw string is bypassed by those encodings.
+ * `src/hosts.js` owns the rule; here we only translate a failure into a TargetError.
  */
-const isHostname = (value) =>
-    /^[A-Za-z0-9][A-Za-z0-9-]*(\.[A-Za-z0-9][A-Za-z0-9-]*)+$/.test(value)
-    && !isInternalHost(value);
-/** A Bluesky handle is exactly a domain name. */
-const looksLikeBlueskyHandle = isHostname;
+function safeInstance(rawHost, raw) {
+    try {
+        return assertPublicHost(rawHost, `"${raw}"`);
+    } catch (error) {
+        if (error instanceof UnsafeHostError) throw new TargetError(error.message, { raw });
+        throw error;
+    }
+}
+
+/** A Bluesky handle is a domain name. It is sent as a query parameter, never used as a host. */
+const isHostShaped = (value) =>
+    /^[A-Za-z0-9][A-Za-z0-9-]*(\.[A-Za-z0-9][A-Za-z0-9-]*)+$/.test(value);
+const looksLikeBlueskyHandle = isHostShaped;
 /** Mastodon usernames are letters, digits, underscore and (for remote accts) dots/hyphens. */
 const isUsername = (value) => /^[A-Za-z0-9_][A-Za-z0-9_.-]*$/.test(value);
 /** Mastodon hashtags are alphanumeric plus underscore -- no spaces, slashes or punctuation. */
@@ -79,7 +86,8 @@ function assertSafeUrl(url, raw) {
     if (url.port) {
         throw new TargetError(`URLs with an explicit port are not accepted: "${raw}"`, { raw });
     }
-    if (!isHostname(normaliseInstance(url.hostname))) {
+    // url.hostname is already canonical, so every IPv4 encoding collapses here.
+    if (!isPublicHostname(url.hostname)) {
         throw new TargetError(`"${url.hostname}" is not a valid public instance host in "${raw}"`, { raw });
     }
 }
@@ -219,9 +227,7 @@ function parseFediverseAddress(value, raw, defaultInstance) {
         if (!isHashtag(tag)) {
             throw new TargetError(`"${tag}" is not a valid hashtag (letters, digits and _ only) in "${raw}"`, { raw });
         }
-        const host = normaliseInstance(instance || defaultInstance);
-        if (!isHostname(host)) throw new TargetError(`"${host}" is not a valid instance host in "${raw}"`, { raw });
-        return mastodonHashtag(host, tag, raw);
+        return mastodonHashtag(safeInstance(normaliseInstance(instance || defaultInstance), raw), tag, raw);
     }
 
     const parts = stripLeading(value, '@').split('@');
@@ -232,11 +238,7 @@ function parseFediverseAddress(value, raw, defaultInstance) {
     if (!isUsername(username)) {
         throw new TargetError(`"${username}" is not a valid Mastodon username in "${raw}"`, { raw });
     }
-    const host = normaliseInstance(instance);
-    if (!isHostname(host)) {
-        throw new TargetError(`"${host}" is not a valid instance host in "${raw}"`, { raw });
-    }
-    return mastodonProfile(host, username, raw);
+    return mastodonProfile(safeInstance(normaliseInstance(instance), raw), username, raw);
 }
 
 /**

@@ -1,7 +1,7 @@
 import { test, describe } from 'node:test';
 import assert from 'node:assert/strict';
 
-import { RowSink, EVENT_POST, EVENT_PROFILE, eventNameForRow, rowKey } from '../src/sink.js';
+import { RowSink, EVENT_POST, EVENT_PROFILE, decideCharging, eventNameForRow, rowKey } from '../src/sink.js';
 import { pool } from '../src/scrape.js';
 
 const noopLog = { info() {}, warning() {}, error() {}, exception() {} };
@@ -9,11 +9,10 @@ const noopLog = { info() {}, warning() {}, error() {}, exception() {} };
 const row = (id, type = 'post', platform = 'mastodon') => ({ platform, type, id });
 
 /** Records every push, optionally reporting the charge limit after N rows. */
-function recorder({ limitAfter = Infinity, failEventNames = false } = {}) {
+function recorder({ limitAfter = Infinity } = {}) {
     const pushes = [];
     let charged = 0;
     const pushData = async (rows, eventName) => {
-        if (failEventNames && eventName) throw new Error('Actor is not monetized');
         pushes.push({ rows, eventName });
         if (eventName) charged += rows.length;
         return { eventChargeLimitReached: charged >= limitAfter };
@@ -130,21 +129,92 @@ describe('RowSink spending limit', () => {
     });
 });
 
-describe('RowSink survives an unmonetized build', () => {
-    test('a rejected event name falls back to storing the rows uncharged', async () => {
-        // A build pushed before the Console monetization wizard is completed rejects the
-        // event name. Losing the data over a billing error would be the worse failure.
-        const { pushData, pushes } = recorder({ failEventNames: true });
-        const sink = new RowSink({ pushData, log: noopLog, batchSize: 1 });
+describe('decideCharging: billing is settled up front, never inferred from a failure', () => {
+    const ppe = {
+        isPayPerEvent: true,
+        perEventPrices: { [EVENT_PROFILE]: 0.002, [EVENT_POST]: 0.001 },
+    };
+
+    test('charges when the Actor is pay-per-event with both events priced', () => {
+        assert.equal(decideCharging(ppe, { isAtHome: true }).charge, true);
+    });
+
+    test('never charges on a local run', () => {
+        const { charge, reason } = decideCharging(ppe, { isAtHome: false });
+        assert.equal(charge, false);
+        assert.match(reason, /locally/i);
+    });
+
+    test('does not charge when the Actor is not pay-per-event yet', () => {
+        // The state right after `apify push` and before the Console wizard is completed.
+        const { charge, reason } = decideCharging({ isPayPerEvent: false }, { isAtHome: true });
+        assert.equal(charge, false);
+        assert.match(reason, /not configured pay-per-event/i);
+    });
+
+    test('does not charge when an event name is missing from the pricing', () => {
+        // Charging an unconfigured event is an error, so refusing to try is the safe move.
+        const partial = { isPayPerEvent: true, perEventPrices: { [EVENT_POST]: 0.001 } };
+        const { charge, reason } = decideCharging(partial, { isAtHome: true });
+        assert.equal(charge, false);
+        assert.match(reason, new RegExp(EVENT_PROFILE));
+    });
+
+    test('does not charge when pricing info could not be read at all', () => {
+        assert.equal(decideCharging(null, { isAtHome: true }).charge, false);
+        assert.equal(decideCharging(undefined, { isAtHome: true }).charge, false);
+    });
+});
+
+describe('RowSink never downgrades billing because of a failed push', () => {
+    test('a transient push error is retried, still charged, and never re-pushed uncharged', async () => {
+        // Regression: any error used to be read as "not monetized", which silently turned
+        // the rest of the run into free delivery and re-pushed rows that may already
+        // have been stored.
+        let calls = 0;
+        const pushes = [];
+        const pushData = async (rows, eventName) => {
+            calls += 1;
+            if (calls === 1) throw new Error('socket hang up');
+            pushes.push({ rows, eventName });
+            return {};
+        };
+        const sink = new RowSink({ pushData, log: noopLog, batchSize: 1, retryBaseMs: 1 });
 
         await sink.emit(row('1'));
-        await sink.emit(row('2'));
         await sink.flushAll();
 
-        assert.equal(sink.charge, false, 'charging disabled after the first failure');
-        assert.equal(pushes.length, 2, 'both rows stored');
-        assert.equal(sink.total, 2);
-        for (const push of pushes) assert.equal(push.eventName, undefined);
+        assert.equal(sink.charge, true, 'charging is still on after a transient failure');
+        assert.equal(pushes.length, 1, 'stored exactly once');
+        assert.equal(pushes[0].eventName, EVENT_POST, 'and still charged');
+        assert.equal(sink.total, 1);
+    });
+
+    test('a persistently failing push fails the run rather than giving data away', async () => {
+        const pushData = async () => { throw new Error('upstream down'); };
+        const sink = new RowSink({ pushData, log: noopLog, batchSize: 1, retryBaseMs: 1 });
+
+        await assert.rejects(() => sink.emit(row('1')), /Failed to store/);
+        assert.equal(sink.total, 0, 'nothing is counted as delivered');
+    });
+
+    test('rows are never re-pushed without an event name after a charged attempt', async () => {
+        const attempts = [];
+        let calls = 0;
+        const pushData = async (rows, eventName) => {
+            attempts.push(eventName);
+            calls += 1;
+            if (calls < 3) throw new Error('flaky');
+            return {};
+        };
+        const sink = new RowSink({ pushData, log: noopLog, batchSize: 1, retryBaseMs: 1 });
+        await sink.emit(row('1'));
+        await sink.flushAll();
+
+        assert.equal(attempts.length, 3);
+        for (const eventName of attempts) {
+            assert.equal(eventName, EVENT_POST, 'every attempt stayed on the charged path');
+        }
     });
 });
 
