@@ -1,0 +1,16 @@
+{
+    "actorSpecification": 1,
+    "name": "fediverse-scraper",
+    "title": "Fediverse Scraper (Mastodon + Bluesky)",
+    "description": "Scrape Mastodon and Bluesky profiles, posts and hashtag timelines through the platforms' official public APIs. One normalized schema across both networks. No login required.",
+    "version": "1.0",
+    "buildTag": "latest",
+    "dockerfile": "./Dockerfile",
+    "readme": "../README.md",
+    "input": "./input_schema.json",
+    "storages": {
+        "dataset": "./dataset_schema.json"
+    },
+    "minMemoryMbytes": 256,
+    "defaultMemoryMbytes": 512
+}
