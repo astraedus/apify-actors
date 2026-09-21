@@ -1,0 +1,14 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="vg-app-review-monitor" cx="50%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#141F33"/>
+      <stop offset="100%" stop-color="#0B1220"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="92" ry="92" fill="#0B1220"/>
+  <rect x="0" y="0" width="512" height="512" rx="92" ry="92" fill="url(#vg-app-review-monitor)"/>
+  <polygon points="146.0,315.0 216.0,315.0 122.0,377.0" fill="#FFFFFF"/>
+  <rect x="88.0" y="83.0" width="336" height="232" rx="50" ry="50"
+        fill="none" stroke="#FFFFFF" stroke-width="44" stroke-linejoin="round"/>
+  <polygon points="256.00,109.00 275.40,168.30 337.79,168.42 287.38,205.20 306.55,264.58 256.00,228.00 205.45,264.58 224.62,205.20 174.21,168.42 236.60,168.30" fill="#F59E0B"/>
+</svg>

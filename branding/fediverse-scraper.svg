@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="vg-fediverse-scraper" cx="50%" cy="38%" r="65%">
+      <stop offset="0%" stop-color="#141F33"/>
+      <stop offset="100%" stop-color="#0B1220"/>
+    </radialGradient>
+  </defs>
+  <rect x="0" y="0" width="512" height="512" rx="92" ry="92" fill="#0B1220"/>
+  <rect x="0" y="0" width="512" height="512" rx="92" ry="92" fill="url(#vg-fediverse-scraper)"/>
+  <line x1="256.0" y1="104.0" x2="400.6" y2="209.0" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
+  <line x1="400.6" y1="209.0" x2="345.3" y2="379.0" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
+  <line x1="345.3" y1="379.0" x2="166.7" y2="379.0" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
+  <line x1="166.7" y1="379.0" x2="111.4" y2="209.0" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
+  <line x1="111.4" y1="209.0" x2="256.0" y2="104.0" stroke="#FFFFFF" stroke-width="40" stroke-linecap="round"/>
+  <circle cx="256.0" cy="104.0" r="53" fill="#0B1220"/>
+  <circle cx="256.0" cy="104.0" r="44" fill="#8B5CF6"/>
+  <circle cx="400.6" cy="209.0" r="53" fill="#0B1220"/>
+  <circle cx="400.6" cy="209.0" r="44" fill="#FFFFFF"/>
+  <circle cx="345.3" cy="379.0" r="53" fill="#0B1220"/>
+  <circle cx="345.3" cy="379.0" r="44" fill="#FFFFFF"/>
+  <circle cx="166.7" cy="379.0" r="53" fill="#0B1220"/>
+  <circle cx="166.7" cy="379.0" r="44" fill="#FFFFFF"/>
+  <circle cx="111.4" cy="209.0" r="53" fill="#0B1220"/>
+  <circle cx="111.4" cy="209.0" r="44" fill="#FFFFFF"/>
+</svg>
