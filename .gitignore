@@ -1,6 +1,77 @@
-node_modules/
+# === Astraedus -- Internal Ops Files ===
+# These are operational files that MUST NOT be in a public repo.
+CLAUDE.md
+.claude/
+
+# Internal task tracking
+tasks/
+
+# Internal planning and strategy docs
+docs/exec-plans/
+docs/devpost-submission.md
+docs/blog-post.md
+docs/demo-script.md
+
+# Demo production files (video build tooling, narration, recordings)
+demo/narration.*
+demo/*-script.*
+demo/record*.py
+demo/build-video.*
+demo/*.mp4
+demo/*.mp3
+demo/audio/
+demo/screenshots/
+demo/seg_*
+
+# Marketing content (drafts, engagement strategy, launch posts)
+marketing/
+
+# Blog drafts
+blog-article.md
+blog-post.md
+
+# Actor-specific internal publishing notes -- self-described "internal",
+# goes stale the moment an actor's visibility/pricing changes. Keep local only.
+actors/*/PUBLISHING.md
+
+# === Apify / project-specific ===
 storage/
 apify_storage/
-.env
-*.log
+
+# === Node ===
+node_modules/
+.next/
+out/
+npm-debug.log*
+yarn-debug.log*
+*.tsbuildinfo
 dist/
+build/
+
+# === Python (branding/generate.py) ===
+__pycache__/
+*.py[cod]
+*.pyo
+.Python
+
+# === Environment (NEVER commit these) ===
+.env
+.env.local
+.env.*.local
+!.env.example
+!.env.*.example
+
+# === IDE ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === OS ===
+.DS_Store
+Thumbs.db
+
+# === Logs ===
+*.log
+logs/
+/tmp/
