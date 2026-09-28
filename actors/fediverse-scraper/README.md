@@ -1,5 +1,7 @@
 # Mastodon & Bluesky Scraper (Fediverse)
 
+**Live on the Apify Store:** [apify.com/astraedus/fediverse-scraper](https://apify.com/astraedus/fediverse-scraper)
+
 Scrape **profiles, posts and hashtag timelines** from Mastodon and Bluesky and get them back in **one normalized schema**, so you can analyse both networks in the same spreadsheet without reconciling two different JSON shapes.
 
 It runs on the platforms' **official public APIs** — `docs.joinmastodon.org` and Bluesky's public AppView. No login, no cookies, no password. That also means it does not break the way scrapers built on private endpoints do.

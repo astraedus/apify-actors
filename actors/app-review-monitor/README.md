@@ -1,5 +1,7 @@
 # App Store & Google Play Review Monitor
 
+**Live on the Apify Store:** [apify.com/astraedus/app-review-monitor](https://apify.com/astraedus/app-review-monitor)
+
 Watch your apps' reviews on both stores and get **only the reviews that are actually new**.
 
 Most review scrapers re-download the same backlog every run and hand you a pile you have already read. This one remembers what it emitted last time, so a daily schedule gives you today's reviews — and only today's reviews. Point it at a webhook and a 1-star review turns into a Slack message minutes after it lands.

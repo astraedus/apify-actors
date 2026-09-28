@@ -1,5 +1,7 @@
 # TikTok Growth Monitor
 
+**Live on the Apify Store:** [apify.com/astraedus/tiktok-growth-monitor](https://apify.com/astraedus/tiktok-growth-monitor)
+
 **Track a batch of TikTok profiles over time.** Point it at a list of profiles, run it on a schedule, and every run tells you what changed since the last one: followers gained or lost, which videos are still picking up views, which videos are brand new, and which ones have gone viral relative to that profile's own normal.
 
 Most TikTok scrapers hand you a pile of videos. This one hands you **the difference between today and yesterday** — which is the part you actually wanted.
